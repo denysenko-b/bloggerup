@@ -10,9 +10,12 @@ const UserSchema = new Schema({
         require: true
     },
 
+    accountUsername: String,
+    accountId: String,
+
     points: {
         type: Number,
-        default: 500
+        default: 500000
     },
 
     referralsCount: {
