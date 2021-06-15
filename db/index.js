@@ -1,5 +1,5 @@
 const db = require('./mongo.db');
 
-module.export = {
+module.exports = {
     connect: db.connect
 }

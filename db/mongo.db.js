@@ -13,4 +13,4 @@ const connect = () => mongoose.connect(dbConfig.uri, dbConfig.options)
 
 module.exports = {
     connect
-}
+} 
