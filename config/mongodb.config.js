@@ -1,5 +1,5 @@
 module.exports = {
-    password: 'admin',
+    password: 'root',
     database: 'tgbot',
     options: {
         useNewUrlParser: true,
