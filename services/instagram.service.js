@@ -1,38 +1,36 @@
 const Instagram = require('instagram-web-api');
-const FileCookieStore = require('tough-cookie-filestore2');
 
 //import config
 const {
     username,
     password
 } = require('../config/instagram.confg');
-const {cacheLoc} = require('../config/storage.config');
-
-const cookieStore = new FileCookieStore(`${cacheLoc}/cookies.json`);
-
 
 class InstagramService {
 
     constructor() {
         this.client = new Instagram({
             username,
-            password,
-            cookieStore
+            password
         });
     }
 
-    getUserId = async (username) => {
+    checkUser = async (username) => {
         try {
-            const user = await this.client.getUserByUsername({username});
-            if (user) {
-                return user.id;
+            const {id, is_private, full_name, edge_owner_to_timeline_media: {count: mediaCount}, edge_followed_by: {count: followers}} = await this.client.getUserByUsername({username});
+            return {
+                id,
+                is_private,
+                full_name,
+                mediaCount,
+                followers
             }
-            throw new Error(`User not found`);
-        } catch (err) {
-            console.error(err);
-            throw 'e';
+        } catch (e) {
+            return null;
         }
     }
+
+
 }
 
 module.exports = new InstagramService();
