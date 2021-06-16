@@ -29,7 +29,12 @@ const UserSchema = new Schema({
         require: false
     },
 
-    prevMessage: String
+    prevMessage: String,
+
+    notification: {
+        type: Boolean,
+        default: true
+    }
 })
 
 
