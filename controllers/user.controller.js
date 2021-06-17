@@ -5,7 +5,7 @@ const minAccountReq = require('../config/minAccountRequirements.config');
 
 class UserController {
 
-    create = async (userId, prevMessage) => {
+    create = async (userId, firstName, chatId, tgUsername, prevMessage) => {
         try {
             const user = await User.findOne({
                 userId
@@ -13,13 +13,20 @@ class UserController {
 
             if (user) {
                 user.prevMessage = prevMessage;
+                user.chatId = chatId;
+                if (firstName) user.firstName = firstName;
+                if (tgUsername) user.tgUsername = tgUsername;
                 await user.save();
 
                 return false;
             }
             await User.create({
                 userId,
-                prevMessage
+                prevMessage,
+                chatId,
+                prevMessage,
+                tgUsername,
+                firstName
             });
             return true;
         } catch (e) {
@@ -31,8 +38,7 @@ class UserController {
     updateAccountUsername = async (userId, username) => {
 
         const userData = await InstagramService.checkUser(username);
-
-        if (!userData) throw 404;
+        if (!userData) throw 'not_found';
 
         const {
             id: instId,
@@ -43,11 +49,15 @@ class UserController {
         } = userData;
 
         if (is_private) throw 'is_private';
+        
 
         const {
             minPhotos,
             minFollowers
         } = minAccountReq;
+
+        if (followers < minFollowers) throw 'few_subscribers';
+        if (mediaCount < minPhotos) throw 'few_media';
 
         try {
             await User.findOneAndUpdate({
@@ -57,12 +67,8 @@ class UserController {
                 accountId: instId
             });
 
-            if (followers < minFollowers) throw 'few_subscribers';
-            if (mediaCount < minPhotos) throw 'few_media';
-
             return full_name;
         } catch (e) {
-            // if (\)
             if (e.codeName === 'DuplicateKey')
                 throw 'already_exists'
         }
@@ -84,6 +90,8 @@ class UserController {
             userId
         }).select('points')).points;
 
+
+    getUserData = async (userId) => User.findOne({userId}).select('accountUsername accountId points referralsCount prevMessage')
 
     getPrevMessage = async (userId) => (await User.findOne({
         userId
