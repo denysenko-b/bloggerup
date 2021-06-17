@@ -1,4 +1,5 @@
 const InstAccoundConfig = require('../config/minAccountRequirements.config');
+const pointsRate = require('../config/pointsRate.config');
 
 module.exports = {
     commands: [{
@@ -16,11 +17,12 @@ module.exports = {
         {
             command: 'notifications', //DONT CHANGE
             description: 'Включить/ выключить оповещения о новых заданиях'
-        },
-        {
-            command: 'cancel',
-            description: 'Отменить' //TODO
         }
+        // ,
+        // {
+        //     command: 'cancel',
+        //     description: 'Отменить' //TODO
+        // }
     ],
 
 
@@ -53,14 +55,14 @@ module.exports = {
 
             menu: `Меню`,
 
-            help: `Команды:\n/start — зарегистрироваться заново,\n/menu — показать главное меню,\n/notifications — включить / выключить оповещения о новых заданиях,\n/cancel - отменить предидущею команду.`,
+            help: `Команды:\n/start — зарегистрироваться заново,\n/menu — показать главное меню,\n/notifications — включить / выключить оповещения о новых заданиях.`, //,\n/cancel - отменить предидущею команду
 
             notifications: {
                 on: `Оповещения о новых заданиях активированы!\nЧтобы отключить их, введите команду /notifications`,
                 off: `Вы больше не будете получать оповещения о новых заданиях!\nЧтобы активировать их, введите команду /notifications`
             },
 
-            cancel: `Отменено.`,
+            // cancel: `Отменено.`,
 
             error: (command) => `Виникла непередбачувана помилка\nСпробуйте викликати /${command} ще раз через деякий час`
         },
@@ -69,11 +71,12 @@ module.exports = {
             newInstAccount: {
                 alreadyExists: `already exists`,
                 successfulReg: (username) => `Successful reg, ${username}`,
-                incorrect: `Не корректне ім'я профілю\nPls try again `,
+                incorrect: `Incorect profile name,\nPls try again:`,
                 notFound: `User not found`,
                 isPrivate: `Account is private!!!`,
                 fewSubscribers: `Few subscribers`,
                 fewMedia: `Few media`,
+                firstCompleteTheRegistration: `Прежде чем использовать сервис, введите свой инстаграм никнейм:`,
                 check: `Check...`
             },
             referral: {
@@ -88,7 +91,21 @@ module.exports = {
                     check: 'Check...'
                 },
                 giveTask: {
-                    about: 'Please, selecte one from next categories: '
+                    about: 'Please, selecte one from next categories: ',
+                    followers: {
+                        about: 'How will it happen? (About this action)',
+                        showCurrentBalance: (points) => `You have ${points} (points)`,
+                        pointsRate: `Current rate: ${pointsRate.pointsToFollowers}`,
+                        waitFollowersCount: `Please, enter how mush followers you want`,
+                        showCost: (points) => `It costs ${points} (points)`,
+                        waitUserAgree: `Do you argee?`,
+                        errors: {
+                            notEnoughPoints: `Not enoung ponts`,
+                            notANumber: `Not a number, pls, type again:`
+                        },
+
+                        successfulAddTask: (followersCount, pointsCount) => `The task for ${followersCount} followers at a cost as ${pointsCount} is successful added`
+                    }
                 },
                 checkBalance: {
                     balance: (points) => `Points: ${points}`
@@ -99,7 +116,7 @@ module.exports = {
             },
 
             iDontUnderstand: `Я тебя не понимаю...`,
-            error: (message) => `Помилка на сервері`
+            error: (message = '') => `Iternal server error: 500 ${message}`
         }
     }
 }
