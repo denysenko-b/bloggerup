@@ -9,6 +9,15 @@ const UserSchema = new Schema({
         require: true
     },
 
+    chatId: {
+        type: Number,
+        unique: true,
+        require: true
+    },
+
+    firstName: String,
+    tgUsername: String,
+
     accountUsername: {
         type: String,
         unique: true

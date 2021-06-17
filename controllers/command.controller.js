@@ -2,7 +2,9 @@ const UserController = require('./user.controller');
 // const Keyboards = require('../keyboards');
 const Texts = require('../texts');
 
-const {MenuKeyboard} = require('../keyboards');
+const {
+    MenuKeyboard
+} = require('../keyboards');
 
 class CommandsController {
 
@@ -12,7 +14,7 @@ class CommandsController {
 
     commands = Texts.commands;
 
-    start = ctx => UserController.create(ctx.from.id, 'reg')
+    start = ctx =>  UserController.create(ctx.from.id, ctx.from.first_name, ctx.chat.id, ctx.from.username, 'reg')
         .then(() => {
             ctx.reply(this.replyTexts.start)
         })
