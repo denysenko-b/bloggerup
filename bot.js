@@ -13,15 +13,22 @@ const bot = new Telegraf(token);
 
 bot.telegram.setMyCommands(CommandsController.commands);
 
+// //dev
+// bot.hears('dev', ctx => {
+//     ctx.editMessageCaption({});
+// })
+
 //comamnds
 bot.start(CommandsController.start);
 bot.help(CommandsController.help)
 bot.command('menu', CommandsController.menu)
 bot.command('notifications', CommandsController.notifications)
-bot.command('cancel', CommandsController.cancel)
+// bot.command('cancel', CommandsController.cancel)
 
 bot.on('message', MessageController.messageListener);
 bot.on('callback_query', MessageController.callbackQueryListener);
+
+
 
 
 const start = () => bot.launch()
