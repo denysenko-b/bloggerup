@@ -2,6 +2,13 @@ const mongoose = require('mongoose');
 
 const Schema = mongoose.Schema;
 
+const CompletedSchema = new Schema({
+    data: String,
+    taskType: String
+}, {
+    _id: false
+})
+
 const UserSchema = new Schema({
     userId: {
         type: Number,
@@ -43,7 +50,11 @@ const UserSchema = new Schema({
     notifications: {
         type: Boolean,
         default: true
-    }
+    },
+
+    completed: [
+        CompletedSchema
+    ]
 })
 
 

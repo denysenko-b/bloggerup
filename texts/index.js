@@ -30,8 +30,9 @@ module.exports = {
         menu: {
             giveTask: 'Дать задание',
             getAvaliableTasks: 'Доступные задания',
-            checkBalance: 'Проверить баланс',
-            buyPoints: 'Купить очки'
+            checkBalance: 'Проверить баланс'
+            // ,
+            // buyPoints: 'Купить очки'
         },
         giveTask: {
             likes: {
@@ -45,7 +46,44 @@ module.exports = {
         },
         getTasks: {
 
-        }
+        },
+        doYouAgree: {
+            followers: (callback_data) => [
+                [{
+                    text: 'Да',
+                    callback_data: `cft=${callback_data}`
+                }],
+                [{
+                    text: 'Нет',
+                    callback_data: 'cancel'
+                }]
+            ],
+            likes: (callback_data) => [
+                [{
+                    text: 'Да',
+                    callback_data: `clt_m=${callback_data}`
+                }],
+                [{
+                    text: 'Нет',
+                    callback_data: 'cancel'
+                }]
+            ]
+        },
+        getPoints: [
+            [
+                {
+                    text: 'Заработать',
+                    callback_data: 'give_me_a_task'
+                }
+            ]
+            // ,
+            // [
+            //     {
+            //         text: 'Да',
+            //         callback_data: 'create_likes_task'
+            //     }
+            // ]
+        ]
     },
 
 
@@ -88,7 +126,9 @@ module.exports = {
 
             tasks: {
                 getAvaliableTasks: {
-                    check: 'Check...'
+                    check: 'Check...',
+                    notAvaliableNow: `Not avaliable tasks now`,
+                    unhandledError: `Unhandled error`
                 },
                 giveTask: {
                     about: 'Please, selecte one from next categories: ',
@@ -96,15 +136,18 @@ module.exports = {
                         about: 'How will it happen? (About this action)',
                         showCurrentBalance: (points) => `You have ${points} (points)`,
                         pointsRate: `Current rate: ${pointsRate.pointsToFollowers}`,
-                        waitFollowersCount: `Please, enter how mush followers you want`,
+                        waitFollowersCount: `Please, enter how many followers you want`,
                         showCost: (points) => `It costs ${points} (points)`,
                         waitUserAgree: `Do you argee?`,
-                        errors: {
-                            notEnoughPoints: `Not enoung ponts`,
-                            notANumber: `Not a number, pls, type again:`
-                        },
 
-                        successfulAddTask: (followersCount, pointsCount) => `The task for ${followersCount} followers at a cost as ${pointsCount} is successful added`
+                        successfulAddTask: `The task for followers at a cost as is successful added`
+                    },
+
+
+                    errors: {
+                        notEnoughPoints: `Not enoung ponts\nPlease, type the lower number:`,
+                        notANumber: `Not a number, pls, type again:`,
+                        errorWhileCreatingTask: `error while creating task`
                     }
                 },
                 checkBalance: {
@@ -115,6 +158,7 @@ module.exports = {
                 }
             },
 
+            cancelQuery: `Отменено`,
             iDontUnderstand: `Я тебя не понимаю...`,
             error: (message = '') => `Iternal server error: 500 ${message}`
         }

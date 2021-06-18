@@ -31,10 +31,11 @@ const getUserData = (() => {
 })()
 
 
-let client = new Instagram({
-    ...getUserData(),
-    cookieStore
-})
+let client = null;
+// let client = new Instagram({
+//     ...getUserData(),
+//     cookieStore
+// })
 
 
 const changeInstaClient = cb => async (...args) => {
@@ -60,7 +61,9 @@ const checkUser = async (username) => {
             username
         });
 
-        if (!userData.graphql) return changeInstaClient(checkUser)(username);
+        // if (Object.keys(userData).length === 0)
+
+        // if (!userData.graphql) return changeInstaClient(checkUser)(username);
 
         const {
             id,
@@ -86,6 +89,16 @@ const checkUser = async (username) => {
     }
 }
 
+const getFollowers = async (userId) => {
+    try {
+        return await client.getFollowers({userId, first: 10});
+    } catch (e) {
+        console.log(e);
+        return null;
+    }
+}
+
 module.exports = {
-    checkUser
+    checkUser,
+    getFollowers
 };

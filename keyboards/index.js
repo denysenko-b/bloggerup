@@ -1,7 +1,9 @@
 const {
     keyboards: {
         menu,
-        giveTask
+        giveTask,
+        doYouAgree,
+        getPoints
     }
 } = require('../texts');
 
@@ -27,7 +29,13 @@ const SelectTaskTypeInlineKeyboard = createKeyboard(
     ]
 )
 
+const DoYouAgreeKeyboard = (type, callback_data) => createKeyboard('inline_keyboard', doYouAgree[type](JSON.stringify(callback_data)));
+
+const GetPointsKeyboard = createKeyboard('inline_keyboard', getPoints);
+
 module.exports = {
     MenuKeyboard,
-    SelectTaskTypeInlineKeyboard
+    SelectTaskTypeInlineKeyboard,
+    DoYouAgreeKeyboard,
+    GetPointsKeyboard
 }

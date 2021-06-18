@@ -5,15 +5,9 @@ const Schema = mongoose.Schema;
 const TaskSchema = new Schema({
     authorId: {
         type: Number,
-        require: true
+        require: true,
+        unique: true
     },
-
-    /**
-     * Тип завдання
-     * Лайки під постом
-     * 
-     * Підписки
-     */
     taskType: {
         type: String,
         require: true
@@ -22,19 +16,14 @@ const TaskSchema = new Schema({
         type: String,
         require: true
     },
-    completed: {
-        type: Number,
-        default: 0
-    },
     count: {
         type: Number,
         require: true
     },
-
-    done: {
-        type: Boolean,
-        default: false
+    points: {
+        type: Number,
+        require: true
     }
 })
 
-module.exports = mongoose.model('Task', TaskSchema);
+module.exports = mongoose.model('Task Preview', TaskSchema);

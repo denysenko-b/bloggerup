@@ -49,7 +49,7 @@ class UserController {
         } = userData;
 
         if (is_private) throw 'is_private';
-        
+
 
         const {
             minPhotos,
@@ -90,8 +90,24 @@ class UserController {
             userId
         }).select('points')).points;
 
+    payForTask = async (userId, points) => {
+        const user = await User.findOne({
+            userId
+        }).select('points');
+        user.points -= points;
 
-    getUserData = async (userId) => User.findOne({userId}).select('accountUsername accountId points referralsCount prevMessage')
+        if (user.points < 0) throw 'not_enought_points';
+
+        await user.save();
+    }
+
+    getCompleted = async (userId) => (await User.findOne({
+        userId
+    }).select('completed')).completed;
+
+    getUserData = async (userId) => await User.findOne({
+        userId
+    }).select('accountUsername accountId points referralsCount prevMessage')
 
     getPrevMessage = async (userId) => (await User.findOne({
         userId
