@@ -87,17 +87,26 @@ class TaskController {
     getAvaliableTasks = async (userId, accountId) => {
         const userCompleted = (await getCompleted(userId)).map(task => task.data);
         userCompleted.push(accountId);
-        console.log(userCompleted);
-        // const {taskType, data} = await Task.findOne({completed: false, data: {$nin: userCompleted}}).select('data taskType');
 
         const task = await Task
-            .find({
-                completed: false,
-                data: {
-                    $nin: userCompleted
+            .aggregate([{
+                $sample: {
+                    size: 1
                 }
-            })
-            // .aggregate()
+            }, {
+                $match: {
+                    done: false,
+                    data: {
+                        $nin: userCompleted
+                    }
+                }
+            }, {
+                $project: {
+                    data: 1,
+                    taskType: 1
+                }
+            }])
+
         console.log(task);
     }
 }

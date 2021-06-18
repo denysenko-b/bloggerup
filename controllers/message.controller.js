@@ -22,19 +22,19 @@ class MessageController {
     regNewInstAccount = async (ctx, userId, username, userData) => {
 
         const replyText = replyMessages.newInstAccount;
-        const messageId = ctx.message.message_id;
-        await ctx.reply(replyText.check);
+        const chatId = ctx.chat.id;
 
+        const {message_id: prev_message_id} = await ctx.reply(replyText.check);
 
+        let message = '';
 
         try {
             if (!validator.isInstagramUsername(username)) throw 'incorrect';
 
             const full_name = await UserController.updateAccountUsername(userId, username);
             await UserController.clearPrevMessage(userId);
-            ctx.reply(replyText.successfulReg(full_name || username));
+            message = replyText.successfulReg(full_name || username);
         } catch (e) {
-            let message = '';
 
             switch (e) {
                 case 'incorrect':
@@ -65,11 +65,9 @@ class MessageController {
                     message = replyMessages.error()
                     break;
             }
-
-            return ctx.reply(message, {
-                reply_to_message_id: messageId
-            });
         }
+
+        return ctx.tg.editMessageText(chatId, prev_message_id, null, message);
     }
 
     giveTask = async (ctx, userId, userData) => {
@@ -77,17 +75,19 @@ class MessageController {
         ctx.reply(replyText.about, SelectTaskTypeInlineKeyboard);
     }
 
-    getAvaliableTasks = async (ctx, userId, {accountId}) => {
+    getAvaliableTasks = async (ctx, userId, {accountId} ) => {
         const replyText = replyMessages.tasks.getAvaliableTasks;
-        await ctx.reply(replyText.check);
-
+        const chatId = ctx.chat.id;
+        const {message_id: prev_message_id} = await ctx.reply(replyText.check);
+        let message = '';
 
         try {
 
-            await TaskController.getAvaliableTasks(userId, accountId);
+            const avaliableTasks = await TaskController.getAvaliableTasks(userId, accountId);
+
+            message = 'Не тикай сюди, це ще не працює))';
 
         } catch (e) {
-            let message = '';
 
             switch (e) {
                 case 'not_avaliable':
@@ -100,8 +100,10 @@ class MessageController {
                     break;
             }
 
-            ctx.reply(message);
+            // ctx.reply(message);
         }
+        
+        return ctx.tg.editMessageText(chatId, prev_message_id, null, message);
     }
 
     checkBalance = async (ctx, userId, {
@@ -133,7 +135,8 @@ class MessageController {
         const {
             prevMessage,
             accountId,
-            points
+            points,
+            accountUsername
         } = userData;
 
         const {
@@ -160,7 +163,7 @@ class MessageController {
         }
 
         if (prevMessage === 'reg') return this.regNewInstAccount(ctx, userId, text);
-        if (prevMessage === 'points_for_followers') return this.callculateCost(ctx, text, PointsRate.pointsToFollowers, points, 'followers', accountId);
+        if (prevMessage === 'points_for_followers') return this.callculateCost(ctx, text, PointsRate.pointsToFollowers, points, 'followers', `${accountId}&${accountUsername}`);
 
         return ctx.reply(replyMessages.iDontUnderstand);
     }
@@ -172,7 +175,7 @@ class MessageController {
         const replyText = replyMessages.tasks.giveTask.followers;
         // const messageId = ctx.callbackQuery.message.message_id;
 
-        await ctx.reply(replyText.about);
+        await ctx.editMessageText(replyText.about);
         // await this.wait(3);
         await ctx.reply(replyText.showCurrentBalance(1000));
         // await this.wait(2);
@@ -182,7 +185,7 @@ class MessageController {
         return ctx.reply(replyText.waitFollowersCount);
     }
 
-    callculateCost = async (ctx, count, [a, b], userPoints, taskType, accountId) => {
+    callculateCost = async (ctx, count, [a, b], userPoints, taskType, data) => {
         let replyText = replyMessages.tasks.giveTask;
         const messageId = ctx.message.message_id;
 
@@ -207,7 +210,7 @@ class MessageController {
             reply_to_message_id: messageId
         });
 
-        const callback_data = [count, accountId];
+        const callback_data = [count, data];
 
         return ctx.reply(replyText.waitUserAgree, DoYouAgreeKeyboard('followers', callback_data));
     }
@@ -241,6 +244,10 @@ class MessageController {
         }
     }
 
+    sendLikesTaskInfo = async (ctx, userId) => {
+        ctx.editMessageText('Не тикай сюди, це ще не работає))')
+    }
+
     cancel = async (ctx) => ctx.editMessageText(replyMessages.cancelQuery, {});
 
     callbackQueryListener = async ctx => {
@@ -259,10 +266,15 @@ class MessageController {
             // getPoints
         } = keyboardsMessages;
 
-        // if (data === giveTask.likes.callback_data) return this.createLikeTask(ctx, userId);
+
+        if (data === giveTask.likes.callback_data) return this.sendLikesTaskInfo(ctx, userId);
         if (data === giveTask.followers.callback_data) return this.sendFollowersTaskInfo(ctx, userId);
         if (data === 'cancel') return this.cancel(ctx, userId);
-        if (data === 'give_me_a_task') return this.getAvaliableTasks(ctx, userId);
+        if (data === 'give_me_a_task') {
+            const userData = await UserController.getUserData(userId);
+            ctx.editMessageReplyMarkup({}); //TODO А воно всігда має бути?
+            return this.getAvaliableTasks(ctx, userId, userData);
+        }
 
 
 

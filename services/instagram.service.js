@@ -61,7 +61,9 @@ const checkUser = async (username) => {
             username
         });
 
-        // if (Object.keys(userData).length === 0)
+        // console.log(userData);
+
+        // if (Object.keys(userData).length === 0);
 
         // if (!userData.graphql) return changeInstaClient(checkUser)(username);
 
@@ -75,7 +77,10 @@ const checkUser = async (username) => {
             edge_followed_by: {
                 count: followers
             }
-        } = userData.graphql.user;
+        } = userData;
+
+        console.log(username, full_name);
+
         return {
             id,
             is_private,
