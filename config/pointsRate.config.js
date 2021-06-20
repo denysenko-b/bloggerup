@@ -1,4 +1,4 @@
 module.exports = {
-    pointsToFollowers: [1000, 100],
+    pointsToFollowers: [100, 1],
     pointsToLikes: [1000, 100]
 }

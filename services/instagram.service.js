@@ -1,109 +1,58 @@
-const Instagram = require('instagram-web-api');
-const FileCookieStore = require('tough-cookie-filestore2')
-const storageConfig = require('../config/storage.config');
+const {
+    IgApiClient
+} = require('instagram-private-api');
 
-const cookieStore = new FileCookieStore(`${storageConfig.cacheLoc}/cookies.json`)
+const ig = new IgApiClient();
 
-//import config
-const USERS = require('../config/instagram.confg');
-
-const getUserData = (() => {
-    let id = 0;
-
-    return () => {
-        let userData = USERS[id++];
-
-        if (id == USERS.length) throw new Error('Trusted accounts have expired')
-
-        if (!userData) {
-            userData = USERS[0];
-            id = 1;
-        };
+const username = 'baklazhan43k';
+const password = '}]9.`beAtKeN7$h';
 
 
-        console.log(`We'll use <${userData[0]}> as Instagram Agent`);
+// ig.state.generateDevice(username);
 
-        return {
-            username: userData[0],
-            password: userData[1]
-        }
-    }
-})()
+// ((async () => {
 
+//     await ig.simulate.preLoginFlow();
+//     const loggedInUser = await ig.account.login(username, password);
 
-let client = null;
-// let client = new Instagram({
-//     ...getUserData(),
-//     cookieStore
-// })
+//     console.log(`We'll use <${username}> as Instagram Agent`);
+
+//     process.nextTick(async () => await ig.simulate.postLoginFlow());
+// }))()
 
 
-const changeInstaClient = cb => async (...args) => {
-    client = new Instagram({
-        ...getUserData(),
-        cookieStore
-    })
-
+const getUserByUsername = async (username) => {
     try {
-        await client.login();
-        const data = client.getProfile();
-        console.log(data);
+        return await ig.user.usernameinfo(username);
     } catch (e) {
-        console.log(e);
-    }
-
-    return await cb(args);
-}
-
-const checkUser = async (username) => {
-    try {
-        const userData = await client.getUserByUsername({
-            username
-        });
-
-        // console.log(userData);
-
-        // if (Object.keys(userData).length === 0);
-
-        // if (!userData.graphql) return changeInstaClient(checkUser)(username);
-
-        const {
-            id,
-            is_private,
-            full_name,
-            edge_owner_to_timeline_media: {
-                count: mediaCount
-            },
-            edge_followed_by: {
-                count: followers
-            }
-        } = userData;
-
-        console.log(username, full_name);
-
-        return {
-            id,
-            is_private,
-            full_name,
-            mediaCount,
-            followers
+        if (e.name === 'IgNotFoundError') {
+            console.log(`Not fount user with username: ${username}`)
+            return null;
         }
-    } catch (e) {
+
         console.log(e);
-        return null;
     }
 }
 
-const getFollowers = async (userId) => {
+const getUserById = async (id) => {
     try {
-        return await client.getFollowers({userId, first: 10});
+        return await ig.user.info(id);
+    } catch (e) {
+        console.log(e.message);
+    }
+}
+
+const getUserFollowers = async (id, size = 3) => {
+    try {
+        const followersFeed = ig.feed.accountFollowers(id);
+        return await followersFeed.items();
     } catch (e) {
         console.log(e);
-        return null;
     }
 }
 
 module.exports = {
-    checkUser,
-    getFollowers
-};
+    getUserById,
+    getUserByUsername,
+    getUserFollowers
+}

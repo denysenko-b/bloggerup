@@ -58,7 +58,7 @@ class TaskController {
             data
         } = task;
 
-        await User.findOneAndUpdate({
+        const {completed} = await User.findOneAndUpdate({
             userId
         }, {
             $push: {
@@ -67,12 +67,14 @@ class TaskController {
                     data
                 }
             }
-        });
+        }).select('completed');
 
         task.completed++;
         if (task.completed == task.count) task.done = true;
 
         await task.save();
+
+        return completed;
     }
 
     // checkCompleteFollowersTask = async (taskId, accountId) => {
@@ -84,11 +86,11 @@ class TaskController {
     //     authorId
     // });
 
-    getAvaliableTasks = async (userId, accountId) => {
+    getAvaliableTasks = async (userId, accountData) => {
         const userCompleted = (await getCompleted(userId)).map(task => task.data);
-        userCompleted.push(accountId);
+        userCompleted.push(accountData);
 
-        const task = await Task
+        const [task] = await Task
             .aggregate([{
                 $sample: {
                     size: 1
@@ -107,7 +109,7 @@ class TaskController {
                 }
             }])
 
-        console.log(task);
+        return task;
     }
 }
 

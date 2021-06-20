@@ -29,20 +29,20 @@ const UserSchema = new Schema({
         type: String,
         unique: true
     },
-    accountId: String,
+    accountId: {
+        type: String,
+        unique: true
+    },
 
     points: {
         type: Number,
         default: 500000
     },
 
-    referralsCount: {
+    referralParent: Number,
+    gotReferralReward: {
         type: Number,
-        default: 0
-    },
-
-    referralParent: {
-        type: Number
+        defaul: false
     },
 
     prevMessage: String,
@@ -54,7 +54,12 @@ const UserSchema = new Schema({
 
     completed: [
         CompletedSchema
-    ]
+    ],
+
+    banned: {
+        type: Boolean,
+        default: false
+    }
 })
 
 

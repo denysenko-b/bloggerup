@@ -3,7 +3,8 @@ const {
         menu,
         giveTask,
         doYouAgree,
-        getPoints
+        getPoints,
+        checkTheTaskIsOver
     }
 } = require('../texts');
 
@@ -33,9 +34,12 @@ const DoYouAgreeKeyboard = (type, callback_data) => createKeyboard('inline_keybo
 
 const GetPointsKeyboard = createKeyboard('inline_keyboard', getPoints);
 
+const CheckTheTaskIsOverKeyboard = (type, callback_data) => createKeyboard('inline_keyboard', checkTheTaskIsOver[type](JSON.stringify(callback_data)))
+
 module.exports = {
     MenuKeyboard,
     SelectTaskTypeInlineKeyboard,
     DoYouAgreeKeyboard,
-    GetPointsKeyboard
+    GetPointsKeyboard,
+    CheckTheTaskIsOverKeyboard
 }

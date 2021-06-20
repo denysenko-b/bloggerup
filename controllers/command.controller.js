@@ -14,11 +14,10 @@ class CommandsController {
 
     commands = Texts.commands;
 
-    start = ctx =>  UserController.create(ctx.from.id, ctx.from.first_name, ctx.chat.id, ctx.from.username, 'reg')
-        .then(() => {
-            ctx.reply(this.replyTexts.start)
-        })
-        .catch(() => {
+    start = ctx => UserController.create(ctx.from.id, ctx.from.first_name, ctx.chat.id, ctx.from.username, 'reg', ctx.startPayload)
+        .then(() => ctx.reply(this.replyTexts.start))
+        .catch((e) => {
+            console.log(e);
             ctx.reply(this.replyTexts.error('start'));
         })
 

@@ -7,6 +7,7 @@ const {
 
 const CommandsController = require('./controllers/command.controller');
 const MessageController = require('./controllers/message.controller');
+const Middlewares = require('./middlewares');
 
 const bot = new Telegraf(token);
 
@@ -14,9 +15,13 @@ const bot = new Telegraf(token);
 bot.telegram.setMyCommands(CommandsController.commands);
 
 // //dev
-// bot.hears('dev', ctx => {
-    // ctx.tg.callApi('')
-// })
+bot.hears('dev', ctx => {
+    // ctx.deleteMessage()
+})
+//
+
+//middleware
+bot.use(Middlewares.checkUser);
 
 //comamnds
 bot.start(CommandsController.start);
