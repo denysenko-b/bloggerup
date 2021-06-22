@@ -2,6 +2,7 @@ const InstAccoundConfig = require('../config/minAccountRequirements.config');
 const pointsRate = require('../config/pointsRate.config');
 const tasksConfig = require('../config/tasks.config');
 const referralRewards = require('../config/referralRewards.confg');
+const instagraServiceConfig = require('../config/instagraService.config');
 
 module.exports = {
     commands: [{
@@ -88,14 +89,12 @@ module.exports = {
             //     }
             // ]
         ],
-        checkTheTaskIsOver: {
-            followers: callback_data => [
-                [{
-                    text: 'Проверить',
-                    callback_data: `cftc=${callback_data}`
-                }]
-            ]
-        }
+        checkTheTaskIsOver: callback_data => [
+            [{
+                text: 'Проверить',
+                callback_data: `cttio=${callback_data}`
+            }]
+        ]
     },
 
 
@@ -128,6 +127,7 @@ module.exports = {
                 fewMedia: `Few media`,
                 firstCompleteTheRegistration: `Прежде чем использовать сервис, введите свой инстаграм никнейм:`,
                 mustHaveAnAvatar: `Your account must have an avatar`,
+                manyRequests: `Много запросов, падажжи ${instagraServiceConfig.minTimeDelay} сек`,
                 check: `🧐` //Check...
             },
             buyPoints: {
@@ -139,15 +139,20 @@ module.exports = {
                     check: 'Check...',
                     notAvaliableNow: `Not avaliable tasks now`,
                     unhandledError: `Unhandled error`,
+                    manyRequests: `Много запросов, подождите ${instagraServiceConfig.minTimeDelay} сек и попробуйте снова`,
+                    instagramServiceIsUnavaliable: `Сервис инстаграма сейчас временно недоступен, пожалуйста, подождите несколько минут и попробуйте снова`,
 
                     followers: {
                         createTask: (full_name, username) => `${full_name}\nYou should subscribe for this user go to the link:\nhttps://www.instagram.com/${username}\nClick on this button after:`,
-                        check: {
-                            notSigned: `Почему не подписался?`,
-                            wait: time => `Не грузи систему, подожди еще ${time}`,
-                            successfullyExecuted: `Успешно виполнено, держи еще`,
-                            unhandledError: `Немножко подожди и попробуй еще раз`
-                        }
+                        notSigned: `Почему не подписался?`,
+                        wait: time => `Не грузи систему, подожди еще ${time}`,
+                        successfullyExecuted: `Успешно виполнено, держи еще`,
+                        notCompleted: `Подписка?`,
+                        instagramServiceIsUnavaliable: `Сервис сейчас временно не доступен. Давай пізніше`
+                    },
+                    likes: {
+                        notCompleted: `Лайк где?`,
+                        instagramServiceIsUnavaliable: `Сервис сейчас временно не доступен. Давай пізніше`
                     }
                 },
                 giveTask: {
@@ -195,7 +200,18 @@ module.exports = {
                 } //TODO Поміняй силку на бота
             },
 
-            banned: `Вы нарушили правила сервиса, за что и были наказаны.\n\nЕсли Вы считаете, что Вас обвинили по ошибке, свяжитесь с:\n@ipromot_helper`,
+            ban: {
+                warnings: [
+                    `Не торопитесь`, //коли бот це каже, він не виконує команди пользователя, тоість тут треба буде розписати так, шо юзер повинен ввести ще раз то шо він вводив
+                    `Второе предупреждение`,
+                    `как только ви получите 5 предупреждений ваш аккаунт будет забанен`
+                ],
+
+                finnaly: `Вы нарушили правила сервиса, за что и были наказаны.\n\nЕсли Вы считаете, что Вас обвинили по ошибке, свяжитесь с:\n@ipromot_helper`
+            },
+            instagramService: {
+                unavaliable: `Сервис инстаграма временно не доступен, попробуйте пожалуйста позже...`
+            },
             cancelQuery: `Отменено`,
             iDontUnderstand: `Я тебя не понимаю...`,
             error: (message = '') => `Iternal server error: 500 ${message}`

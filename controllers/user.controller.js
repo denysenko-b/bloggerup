@@ -3,6 +3,7 @@ const InstagramService = require('../services/instagram.service');
 
 const minAccountReq = require('../config/minAccountRequirements.config');
 const referralRewards = require('../config/referralRewards.confg');
+const notificationsConfig = require('../config/notifications.config');
 
 class UserController {
 
@@ -27,12 +28,20 @@ class UserController {
                 chatId,
                 prevMessage,
                 tgUsername,
-                firstName,
-                referralParent
+                firstName
             })
 
-            if (!referralParent) newUser.gotReferralReward = true;
+            console.log(`New user has been created. His name is: ${firstName}`)
 
+            if (!referralParent) newUser.gotReferralReward = true;
+            else {
+                const trueReferral = await User.findOne({
+                    userId: referralParent
+                }).select('_id');
+                if (trueReferral) {
+                    newUser.referralParent = referralParent;
+                }
+            }
 
             // console.log(referralId, userId);
             // if (referralId && (referralId !== userId)) {
@@ -67,9 +76,7 @@ class UserController {
         }
     }
 
-    updateAccountUsername = async (userId, username) => {
-
-        const userData = await InstagramService.getUserByUsername(username);
+    updateAccountUsername = async (userId, userData) => {
         if (!userData) throw 'not_found';
 
         const {
@@ -79,7 +86,8 @@ class UserController {
             follower_count: followers,
             media_count: mediaCount,
             has_anonymous_profile_picture,
-            profile_pic_url
+            profile_pic_url,
+            username
         } = userData;
 
         if (is_private) throw 'is_private';
@@ -110,6 +118,8 @@ class UserController {
         } catch (e) {
             if (e.codeName === 'DuplicateKey')
                 throw 'already_exists'
+
+            console.log(e);
         }
     }
 
@@ -140,38 +150,63 @@ class UserController {
         await user.save();
     }
 
-    getUsersWithEnabledNotifications = (size, chatId) => User.aggregate([{
-        $sample: {
-            size
-        }
-    }, {
-        $match: {
-            notifications: true,
-            banned: false,
-            prevMessage: null,
-            chatId: {
-                $ne: chatId
+    getUsersWithEnabledNotifications = async (count, chatId) => {
+        const users = await User.aggregate([{
+            $sample: {
+                size: Math.ceil(count * notificationsConfig.userCountPercent)
             }
-        }
-    }, {
-        $project: {
-            chatId: 1,
-            _id: 0
-        }
-    }])
+        }, {
+            $match: {
+                notifications: true,
+                banned: false,
+                prevMessage: null,
+                chatId: {
+                    $ne: chatId
+                },
+                lastActivity: {
+                    $lte: new Date(Date.now() - notificationsConfig.absenseTime * 1000 * 60)
+                },
+                lastTaskNotificationDate: {
+                    $lte: new Date(Date.now() - notificationsConfig.timeSinceLastTaskNotification * 1000 * 60 * 60)
+                }
+            }
+        }, {
+            $project: {
+                chatId: 1
+            }
+        }])
 
-    getReferralParentData = async (userId) => User.findOne({userId}).select('chatId firstName points')
+        setTimeout(() => this.updateLastTaskNotificationDate(users), 0);
+        return users;
+    }
+
+    updateLastTaskNotificationDate = users => users.forEach(async ({
+        _id
+    }) => {
+        try {
+            await User.findByIdAndUpdate(_id, {
+                lastTaskNotificationDate: new Date(Date.now())
+            })
+        } catch (e) {
+            console.log(e);
+        }
+    })
+
+    getReferralParentData = async (userId) => User.findOne({
+        userId
+    }).select('chatId firstName points')
 
     getCompleted = async (userId) => (await User.findOne({
         userId
     }).select('completed')).completed;
 
-    getUserData = (userId, firstName, tgUsername) => User.findOneAndUpdate({
+    getUserData = (userId, firstName, tgUsername, lastActivity) => User.findOneAndUpdate({
         userId
     }, {
         firstName,
-        tgUsername
-    }).select('accountId points prevMessage banned chatId gotReferralReward referralParent')
+        tgUsername,
+        lastActivity
+    }).select('accountId accountUsername points prevMessage banned chatId gotReferralReward referralParent lastActivity lastActivityInst')
 
     getPrevMessage = async (userId) => (await User.findOne({
         userId

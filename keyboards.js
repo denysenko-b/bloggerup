@@ -6,7 +6,7 @@ const {
         getPoints,
         checkTheTaskIsOver
     }
-} = require('../texts');
+} = require('./texts');
 
 const createKeyboard = (type, keyboard, options={}) => ({
     "reply_markup": {
@@ -34,7 +34,7 @@ const DoYouAgreeKeyboard = (type, callback_data) => createKeyboard('inline_keybo
 
 const GetPointsKeyboard = createKeyboard('inline_keyboard', getPoints);
 
-const CheckTheTaskIsOverKeyboard = (type, callback_data) => createKeyboard('inline_keyboard', checkTheTaskIsOver[type](JSON.stringify(callback_data)))
+const CheckTheTaskIsOverKeyboard = callback_data => createKeyboard('inline_keyboard', checkTheTaskIsOver(JSON.stringify(callback_data)))
 
 module.exports = {
     MenuKeyboard,

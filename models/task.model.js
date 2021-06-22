@@ -34,6 +34,11 @@ const TaskSchema = new Schema({
     done: {
         type: Boolean,
         default: false
+    },
+
+    publishedAt: {
+        type: Date,
+        default: new Date(Date.now())
     }
 })
 

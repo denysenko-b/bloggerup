@@ -5,18 +5,19 @@ const {
     token
 } = require('./config/bot.config');
 
-const CommandsController = require('./controllers/command.controller');
+const CommandController = require('./controllers/command.controller');
 const MessageController = require('./controllers/message.controller');
 const Middlewares = require('./middlewares');
 
 const bot = new Telegraf(token);
 
 
-bot.telegram.setMyCommands(CommandsController.commands);
+bot.telegram.setMyCommands(CommandController.commands);
 
 // //dev
 bot.hears('dev', ctx => {
     // ctx.deleteMessage()
+    // ctx.editMessageCaption()
 })
 //
 
@@ -24,12 +25,14 @@ bot.hears('dev', ctx => {
 bot.use(Middlewares.checkUser);
 
 //comamnds
-bot.start(CommandsController.start);
-bot.help(CommandsController.help)
+bot.start(CommandController.start);
+bot.help(CommandController.help)
 // bot.on('sticker', (ctx) => ctx.reply('👍'))
-bot.command('menu', CommandsController.menu)
-bot.command('notifications', CommandsController.notifications)
+bot.command('menu', CommandController.menu)
+bot.command('notifications', CommandController.notifications)
 // bot.command('cancel', CommandsController.cancel)
+
+bot.use(Middlewares.isNewUser)
 
 bot.on('message', MessageController.messageListener);
 bot.on('callback_query', MessageController.callbackQueryListener);

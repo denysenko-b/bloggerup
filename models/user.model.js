@@ -41,8 +41,8 @@ const UserSchema = new Schema({
 
     referralParent: Number,
     gotReferralReward: {
-        type: Number,
-        defaul: false
+        type: Boolean,
+        default: false
     },
 
     prevMessage: String,
@@ -59,7 +59,22 @@ const UserSchema = new Schema({
     banned: {
         type: Boolean,
         default: false
-    }
+    },
+
+    lastActivity: {
+        type: Date,
+        default: new Date(Date.now())
+    },
+    lastActivityInst: {
+        type: Date,
+        default: new Date(Date.now())
+    },
+    
+    lastTaskNotificationDate: {
+        type: Date,
+        default: new Date(1)
+    },
+
 })
 
 

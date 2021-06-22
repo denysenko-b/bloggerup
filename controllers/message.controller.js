@@ -6,8 +6,7 @@ const validator = require('../validators');
 
 const PointsRate = require('../config/pointsRate.config');
 const TasksConfig = require('../config/tasks.config');
-const NotificationsConfig = require('../config/notifications.config');
-const ReferralRewards = require('../config/referralRewards.confg');
+const WarningsConfig = require('../config/warnings.config');
 
 const Texts = require('../texts');
 
@@ -36,10 +35,15 @@ class MessageController {
         try {
             if (!validator.isInstagramUsername(username)) throw 'incorrect';
 
+            const instUserData = await InstagramService.getUserByUsername(ctx, username.toLowerCase());
+
+            const asd = await UserController.updateAccountUsername(userId, instUserData);
+
             const {
                 full_name,
                 profile_pic_url
-            } = await UserController.updateAccountUsername(userId, username.toLowerCase());
+            } = asd;
+
             await UserController.clearPrevMessage(userId);
             await ctx.tg.deleteMessage(chatId, prev_message_id);
 
@@ -53,8 +57,13 @@ class MessageController {
             let message = '';
 
             switch (e) {
+
                 case 'incorrect':
                     message = replyText.incorrect;
+                    break;
+
+                case 'many_requests':
+                    message = replyText.manyRequests;
                     break;
 
                 case 'not_found':
@@ -79,6 +88,10 @@ class MessageController {
 
                 case 'few_subscribers':
                     message = replyText.fewSubscribers;
+                    break;
+
+                case 'service_is_unavaliabe':
+                    message = replyMessages.instagramService.unavaliable;
                     break;
 
                 default:
@@ -115,23 +128,31 @@ class MessageController {
                 profile_pic_url,
                 full_name,
                 username
-            } = await InstagramService.getUserById(data);
+            } = await InstagramService.getUserById(ctx, data);
 
             const caption = replyMessages.tasks.getAvaliableTasks.followers.createTask(full_name, username);
 
             await ctx.tg.deleteMessage(chatId, prev_message_id);
             return ctx.replyWithPhoto(profile_pic_url, {
                 caption,
-                ...CheckTheTaskIsOverKeyboard('followers', [data, _id])
+                ...CheckTheTaskIsOverKeyboard([data, _id, 'f'])
             });
         } catch (e) {
             let message = '';
 
             switch (e) {
+                case 'many_requests':
+                    message = replyText.manyRequests;
+                    break;
+
+                case 'service_is_unavaliabe':
+                    message = replyText.instagramServiceIsUnavaliable;
+                    break;
 
                 default:
                     console.log(e);
-                    return ctx.reply(replyText.unhandledError);
+                    message = replyText.unhandledError;
+                    break;
             }
 
             ctx.tg.editMessageText(chatId, prev_message_id, null, message);
@@ -216,7 +237,7 @@ class MessageController {
 
     }
 
-    messageListener = async ctx => {
+    messageListener = async (ctx) => {
         const {
             message,
             from: {
@@ -229,6 +250,7 @@ class MessageController {
         } = message;
 
         const userData = ctx.userData;
+
         const {
             prevMessage,
             accountId,
@@ -322,14 +344,14 @@ class MessageController {
     }
 
     sendNotificationsAboutNewTask = async (ctx, chatId, count) => {
-        const {
-            userCountPercent
-        } = NotificationsConfig;
-        const userCount = Math.floor(count * userCountPercent);
+        const users = await UserController.getUsersWithEnabledNotifications(count, chatId);
 
-        const users = await UserController.getUsersWithEnabledNotifications(userCount, chatId);
 
-        console.log(users);
+        //TODO: remove this where the app will go out development
+        {
+            console.log(`Notifications.\nCreator: <${ctx.from.first_name}:${ctx.userData.accountUsername}>`)
+            console.table(users);
+        }
 
         users.forEach(({
             chatId
@@ -380,52 +402,113 @@ class MessageController {
 
     cancel = async (ctx) => ctx.editMessageText(replyMessages.cancelQuery, {});
 
-    checkFollowersTask = async (ctx, userId, [taskAccountId, taskId]) => {
-        ctx.deleteMessage(ctx.callbackQuery.message?.message_id);
-        ctx.reply('In future update');
-        // const taskUserFollowers = await InstagramService.getUserFollowers(taskAccountId);
 
-        // const {
-        //     accountId
-        // } = ctx.userData;
+    checkTheFTaskIsOver = async (ctx, taskAccountId) => {
+        const userFollowers = await InstagramService.getUserFollowers(ctx, taskAccountId);
 
-        // const replyText = replyMessages.tasks.getAvaliableTasks.followers.check;
-
-        // // console.log(taskUserFollowers);
-        // try {
-        //     for (const follower of taskUserFollowers) {
-        //         const {
-        //             pk
-        //         } = follower;
-
-        //         if (pk == accountId) {
-        //             const completed = await TaskController.markCompleted(userId, taskId);
+        const {
+            accountId
+        } = ctx.userData;
 
 
+        for (const follower of userFollowers) {
+            const {
+                pk
+            } = follower;
 
-        //             if (completed.length === 0 && !ctx.userData.gotReferralReward) {
-        //                 const {referralParent} = ctx.userData;
-        //                 const {first_name} = ctx.from;
-        //                 const referralUser = await UserController.getReferralParentData(referralParent);
-        //                 const {chatId: rechatId, firstName: refirstName} = referralUser;
+            if (pk == accountId) {
+                return true;
+            }
+        }
 
-        //                 const rereplyText = replyMessages.referralRewards;
+        return false;
+    }
 
-        //                 ctx.userData.points += ReferralRewards.points;
-                        
-
-        //                 await ctx.userData.save();
-        //                 await ctx.reply(rereplyText.child(refirstName));
+    checkTheLTaskIsOver = async (ctx, taskAccountId) => {
 
 
-        //                 await referralUser.save();
-        //                 return ctx.tg.sendMesage(rechatId, rereplyText.parent(first_name));
-        //             }
-        //         };
-        //     }
-        // } catch (e) {
+        return false;
+    }
 
-        // }
+    sendReferralRewards = async (ctx, chatId, rechatId, firstName) => {
+
+    }
+
+    checkTheTaskIsOver = async (ctx, userId, [data, taskId, taskType]) => {
+        // ctx.reply('In future update');
+
+        const {
+            message: {
+                reply_markup: cacheReplyMarkup,
+                caption: cacheCaption
+            }
+        } = ctx.callbackQuery;
+
+        let replyText = replyMessages.tasks.getAvaliableTasks;
+        let isOver = false;
+
+
+        try {
+            await ctx.editMessageCaption(replyText.check);
+
+            switch (taskType) {
+                case 'f':
+                    isOver = await this.checkTheFTaskIsOver(ctx, data);
+                    replyText = replyText.followers;
+                    break;
+
+                case 'l':
+                    isOver = await this.checkTheLTaskIsOver(ctx, data);
+                    replyText = replyText.likes;
+                    break;
+
+                default:
+                    throw 'Incorrect task type';
+            }
+            if (!isOver) throw 'task_isnot_completed';
+
+            await TaskController.markCompleted(userId, taskId);
+
+            await ctx.editMessageCaption(replyText.successfullyExecuted);
+
+            setTimeout(() => this.getAvaliableTasks(ctx, userId, ctx.userData), 0);
+
+            const {
+                referralParent,
+                gotReferralReward
+            } = ctx.userData;
+            if (referralParent && !gotReferralReward) {
+                this.sendReferralRewards;
+            }
+
+        } catch (e) {
+            let message = '';
+
+            switch (e) {
+                case 'task_isnot_completed':
+                    message = replyText.notCompleted;
+                    break;
+
+                case 'Incorrect task type':
+                    message = replyText.unhandledError;
+                    break;
+
+                case 'service_is_unavaliabe':
+                    message = replyText.instagramServiceIsUnavaliable;
+                    break;
+
+                default:
+                    message = replyText.unhandledError;
+                    break;
+            }
+
+            await ctx.editMessageCaption(message);
+
+            setTimeout(() => {
+                ctx.editMessageCaption(cacheCaption);
+                ctx.editMessageReplyMarkup(cacheReplyMarkup)
+            }, WarningsConfig.warnDuration * 1000);
+        }
     }
 
     becomeAReferral = async (ctx, userId) => {
@@ -464,7 +547,7 @@ class MessageController {
         _data = JSON.parse(_data);
 
         if (command === 'cft') return this.createTask(ctx, userId, _data, 'followers', PointsRate.pointsToFollowers);
-        if (command === 'cftc') return this.checkFollowersTask(ctx, userId, _data);
+        if (command === 'cttio') return this.checkTheTaskIsOver(ctx, userId, _data);
     }
 }
 

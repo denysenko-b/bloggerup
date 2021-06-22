@@ -2,54 +2,106 @@ const {
     IgApiClient
 } = require('instagram-private-api');
 
+const InstServiceConfig = require('../config/instagraService.config');
+const User = require('../models/user.model');
+const AGENTS = require('../config/instagramAgents.confg');
+
+
 const ig = new IgApiClient();
+let avaliabe = false; //TODO: true
 
-const username = 'baklazhan43k';
-const password = '}]9.`beAtKeN7$h';
+const login = async (username, password) => {
+    ig.state.generateDevice(username);
+    await ig.simulate.preLoginFlow();
+    const loggedInUser = await ig.account.login(username, password);
+    console.log(`We'll use <${username}> as Instagram Agent`);
 
+    process.nextTick(async () => await ig.simulate.postLoginFlow());
+    avaliabe = true;
+}
 
-// ig.state.generateDevice(username);
+function* userDataGenerator() {
+    for (let i = 0;; i++) {
+        if (i === AGENTS.length) i = 0;
+        yield AGENTS[i];
+    }
+}
 
-// ((async () => {
+const getUserData = userDataGenerator();
 
-//     await ig.simulate.preLoginFlow();
-//     const loggedInUser = await ig.account.login(username, password);
-
-//     console.log(`We'll use <${username}> as Instagram Agent`);
-
-//     process.nextTick(async () => await ig.simulate.postLoginFlow());
-// }))()
-
-
-const getUserByUsername = async (username) => {
+async function changeAgent() {
     try {
-        return await ig.user.usernameinfo(username);
+        await login(...getUserData.next().value)
     } catch (e) {
-        if (e.name === 'IgNotFoundError') {
-            console.log(`Not fount user with username: ${username}`)
-            return null;
+        setTimeout(changeAgent, 5 * 60 * 1000)
+    }
+}
+
+if (avaliabe)
+    changeAgent();
+
+const request = (cb, errorHandler) => async (ctx, ...args) => {
+    if (!avaliabe) throw 'service_is_unavaliabe';
+
+    const {
+        from: {
+            id: userId
+        },
+        deltaInstTime
+    } = ctx;
+
+    if (deltaInstTime < InstServiceConfig.minTimeDelay) throw 'many_requests';
+
+    try {
+        await User.findOneAndUpdate({
+            userId
+        }, {
+            lastActivityInst: new Date(Date.now())
+        })
+
+        const data = await cb(...args);
+
+        return data;
+    } catch (e) {
+        // if (e.name === 'IgLoginRequiredError') {
+        //     avaliabe = false;
+        //     setTimeout(changeAgent, 0);
+        //     return request()();
+        // }
+
+        //TODO:dev (message [old]) --- for production change message to name
+        if (e.name === 'IgResponseError' || e.name === 'IgLoginRequiredError') {
+            avaliabe = false;
+            setTimeout(changeAgent, 0);
+            return request()();
         }
+        if (errorHandler) {
+            const handledE = errorHandler(e);
+            if (handledE !== undefined) return handledE;
+        };
 
         console.log(e);
     }
 }
 
-const getUserById = async (id) => {
-    try {
-        return await ig.user.info(id);
-    } catch (e) {
-        console.log(e.message);
-    }
-}
+const getUserByUsername = request(
+    async (username) => {
+            return await ig.user.usernameinfo(username);
+        },
+        (e) => {
+            if (e.name === 'IgNotFoundError') {
+                return null;
+            }
+        }
+)
 
-const getUserFollowers = async (id, size = 3) => {
-    try {
-        const followersFeed = ig.feed.accountFollowers(id);
-        return await followersFeed.items();
-    } catch (e) {
-        console.log(e);
-    }
-}
+const getUserById = request(
+    (id) => ig.user.info(id)
+)
+
+const getUserFollowers = request(
+    (id) => ig.feed.accountFollowers(id).items()
+)
 
 module.exports = {
     getUserById,
