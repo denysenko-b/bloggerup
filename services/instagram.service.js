@@ -6,7 +6,7 @@ const User = require("../models/user.model");
 const AGENTS = require("../config/instagramAgents.confg");
 
 const ig = new IgApiClient();
-let avaliabe = false; //TODO: true
+let avaliabe = InstServiceConfig.avaliable;
 
 const login = async (username, password) => {
     ig.state.generateDevice(username);
