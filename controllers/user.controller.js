@@ -192,9 +192,9 @@ class UserController {
         }
     })
 
-    getReferralParentData = async (userId) => User.findOne({
+    getReferralData = async (userId) => User.findOne({
         userId
-    }).select('chatId firstName points')
+    }).select('chatId firstName points gotReferralReward')
 
     getCompleted = async (userId) => (await User.findOne({
         userId

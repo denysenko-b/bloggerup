@@ -18,7 +18,7 @@ class CommandsController {
         .then(() => ctx.reply(this.replyTexts.start))
         .catch((e) => {
             console.log(e);
-            ctx.reply(this.replyTexts.error('start'));
+            // ctx.reply(this.replyTexts.error('start'));
         })
 
     help = ctx => {
@@ -41,6 +41,14 @@ class CommandsController {
             ctx.reply(text.off);
         }
     }
+
+    support = ctx => UserController.setPrevMessage(ctx.from.id, 'support_describe_a_problem')
+        .then(() => {
+            ctx.reply(this.replyTexts.support);
+        })
+        .catch(() => {
+
+        })
 
     cancel = async ctx =>
         UserController.clearPrevMessage(ctx.from.id)

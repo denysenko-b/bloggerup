@@ -4,7 +4,11 @@ const Schema = mongoose.Schema;
 
 const CompletedSchema = new Schema({
     data: String,
-    taskType: String
+    taskType: String,
+    completedAt: {
+        type: Date,
+        default: new Date(Date.now())
+    }
 }, {
     _id: false
 })

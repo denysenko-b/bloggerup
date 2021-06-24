@@ -3,6 +3,7 @@ const pointsRate = require('../config/pointsRate.config');
 const tasksConfig = require('../config/tasks.config');
 const referralRewards = require('../config/referralRewards.confg');
 const instagraServiceConfig = require('../config/instagraService.config');
+const helperConfig = require('../config/helper.config');
 
 module.exports = {
     commands: [{
@@ -20,6 +21,10 @@ module.exports = {
         {
             command: 'notifications', //DONT CHANGE
             description: 'Включить/ выключить оповещения о новых заданиях'
+        },
+        {
+            command: 'support',
+            description: 'Запрос в техподдержку'
         }
         // ,
         // {
@@ -94,23 +99,36 @@ module.exports = {
                 text: 'Проверить',
                 callback_data: `cttio=${callback_data}`
             }]
+        ],
+        supportSendAddMaterial: (id) => [
+            [{
+                text: 'Пропустить',
+                callback_data: `support_ss=["${id}"]`
+            }]
+        ],
+        supportTheProblemIsSuccessfulyCompleted: callback_data => [
+            [{
+                text: 'Решена',
+                callback_data: `stpisc=${callback_data}`
+            }]
         ]
     },
 
 
     reply: {
         commands: {
-            start: `Чтобы зарегистрироваться и начать бесплатное продвижение, введите ник Вашего Instagram профиля. Он должен соответствовать следующим условиям:\n(Якийсь смайл) наличие минимум ${InstAccoundConfig.minPhotos} фотографий,\n(Якийсь смайл) наличие ${InstAccoundConfig.minFollowers} подписчиков\nНаличие аватарки\n\nФЕЙКИ БУДУТ БЛОКИРОВАТЬСЯ 🔒`,
+            start: `Чтобы зарегистрироваться и начать бесплатное продвижение, введите ник Вашего Instagram профиля. Он должен соответствовать следующим условиям:\n(Якийсь смайл) наличие минимум ${InstAccoundConfig.minPhotos} фотографий,\n(Якийсь смайл) наличие ${InstAccoundConfig.minFollowers} подписчиков\n\nФЕЙКИ БУДУТ БЛОКИРОВАТЬСЯ 🔒`,
 
             menu: `Меню`,
 
-            help: `Команды:\n/start — зарегистрироваться заново,\n/menu — показать главное меню,\n/notifications — включить / выключить оповещения о новых заданиях.\n\nЖалобы и предложения:\n@ipromot_helper`, //,\n/cancel - отменить предидущею команду
+            help: `Команды:\n/start — зарегистрироваться заново,\n/menu — показать главное меню,\n/notifications — включить / выключить оповещения о новых заданиях.\n/support - система поддержки (тикет-система)\n\nЖалобы и предложения:\n@${helperConfig.username}`, //,\n/cancel - отменить предидущею команду
 
             notifications: {
                 on: `Оповещения о новых заданиях активированы!\nЧтобы отключить их, введите команду /notifications`,
                 off: `Вы больше не будете получать оповещения о новых заданиях!\nЧтобы активировать их, введите команду /notifications`
             },
 
+            support: `Опишите, пожалуйста, суть проблемы с которой Вы столкнулись:`,
             // cancel: `Отменено.`,
 
             error: (command) => `Виникла непередбачувана помилка\nСпробуйте викликати /${command} ще раз через деякий час`
@@ -143,16 +161,22 @@ module.exports = {
                     instagramServiceIsUnavaliable: `Сервис инстаграма сейчас временно недоступен, пожалуйста, подождите несколько минут и попробуйте снова`,
 
                     followers: {
+                        check: `Проверка...`,
                         createTask: (full_name, username) => `${full_name}\nYou should subscribe for this user go to the link:\nhttps://www.instagram.com/${username}\nClick on this button after:`,
-                        notSigned: `Почему не подписался?`,
                         wait: time => `Не грузи систему, подожди еще ${time}`,
                         successfullyExecuted: `Успешно виполнено, держи еще`,
+                        successfullyExecutedWithReward: `Успешно виполнено`,
                         notCompleted: `Подписка?`,
                         instagramServiceIsUnavaliable: `Сервис сейчас временно не доступен. Давай пізніше`
                     },
                     likes: {
+                        check: `Проверка...`,
+                        createTask: (shortUrl) => `You should like this media going to the link:\nhttps://www.instagram.com/p/${shortUrl}`,
+                        wait: time => `Не грузи систему, подожди еще ${time}`,
+                        successfullyExecuted: `Успешно виполнено, держи еще`,
+                        successfullyExecutedWithReward: `Успешно виполнено`,
                         notCompleted: `Лайк где?`,
-                        instagramServiceIsUnavaliable: `Сервис сейчас временно не доступен. Давай пізніше`
+                        instagramServiceIsUnavaliable: `Сервис сейчас временно не доступен. Давай пізніше`,
                     }
                 },
                 giveTask: {
@@ -160,12 +184,29 @@ module.exports = {
                     followers: {
                         about: 'How will it happen? (About this action)',
                         showCurrentBalance: (points) => `You have ${points} (points)`,
-                        pointsRate: `Current rate: ${pointsRate.pointsToFollowers}`,
+                        pointsRate: `Current rate: ${pointsRate.followers}`,
                         waitFollowersCount: `Please, enter how many followers you want (min count = ${tasksConfig.minCount.followers})`,
                         showCost: (points) => `It costs ${points} (points)`,
                         waitUserAgree: `Do you argee?`,
 
                         successfulAddTask: `The task for followers at a cost as is successful added`
+                    },
+                    likes: {
+                        about: `Коротко про завданя, щоб ставити лайки\nВведіть посилання на пост.\nПожалуйста, предоставьте ссылку на пост в следующем формате:\nhttps://www.instagram.com/p/your_hash`,
+
+                        
+                        waitUserAgree: (points) => `Cost: ${points} points.\nВи згодні?`,
+
+                        notFound: 'Пост не найден',
+                        notYourAccount: 'Не ваш аккаунт',
+                        notVerifiedUrl: `Не коректно`,
+                        badRequest: `Не коректні данні`,
+
+                        waitLikesCount: `Please, enter how many likes you want (min count = ${tasksConfig.minCount.likes})`,
+                        showCost: (points) => `It costs ${points} (points)`,
+                        waitUserAgree: `Do you argee?`,
+
+                        successfulAddTask: `The task for likes at a cost as is successful added`
                     },
 
 
@@ -174,9 +215,11 @@ module.exports = {
                         notANumber: `Not a number, pls, type again:`,
                         errorWhileCreatingTask: `error while creating task`,
                         lessThenMinCount: {
-                            followers: `Please, type a number greater than min count: `
+                            followers: `Please, type a number greater than min count: `,
+                            likes: `Please, type a number greater than min count: `
                         },
-                        fewPoints: `Too few points. Чтобы дать задание нужно минимум: ${tasksConfig.minPointsCount}`
+                        fewPoints: `Too few points. Чтобы дать задание нужно минимум: ${tasksConfig.minPointsCount}`,
+                        unhandledError: `Unhandled error`
                     }
                 },
                 checkBalance: {
@@ -186,6 +229,15 @@ module.exports = {
 
                 },
                 notifications: `Проверьте наличие новых заданий`
+            },
+
+            support: {
+                sendAddMaterials: `Отправьте, пожалуйста, один скриншот или видео с демонстрацией, это поможет нам быстрее разобраться!`,
+                theProblemIsSuccessfullyCompleted: (id) => `Ваш вопрос #${id} был решён!\nПожалуйста, проверьте, а если проблема осталась, пишите: @${helperConfig.username}`,
+                created: (id) => `Спасибо, Вашей заявке присвоен номер - #${id}\nВ ближайшее время наш специалист решит данный вопрос и Вы получите соответствующее уведомление!\nПри неоходимости - наши специалисты свяжутся с Вами для уточнения деталей обращения.`,
+                problem: (problemId, firstName, username, userId, chatId, message) => `#BUG\n\n<b>Id</b>:${problemId}\n\n<b>From:</b>\nName - ${firstName}\nUsername - ${username}\nId - ${userId}\nChatId - ${chatId}\n\n<b>Problem:</b>\n${message}`,
+                fixed: (prev) => `#BUG_FIXED${prev.slice(4)}`,
+                sendMessage: (name, message) => `Здравствуйте ${name}!\n\n${message}\n\nС уважением @${helperConfig.username}.\nНе отвечайте на это письмо.`
             },
 
             referralRewards: {
@@ -207,14 +259,14 @@ module.exports = {
                     `как только ви получите 5 предупреждений ваш аккаунт будет забанен`
                 ],
 
-                finnaly: `Вы нарушили правила сервиса, за что и были наказаны.\n\nЕсли Вы считаете, что Вас обвинили по ошибке, свяжитесь с:\n@ipromot_helper`
+                finnaly: `Вы нарушили правила сервиса, за что и были наказаны.\n\nЕсли Вы считаете, что Вас обвинили по ошибке, свяжитесь с:\n@${helperConfig.username}`
             },
             instagramService: {
                 unavaliable: `Сервис инстаграма временно не доступен, попробуйте пожалуйста позже...`
             },
             cancelQuery: `Отменено`,
-            iDontUnderstand: `Я тебя не понимаю...`,
-            error: (message = '') => `Iternal server error: 500 ${message}`
+            iDontUnderstand: `Извините, но я пока не умею распознавать рукописный ввод но я работаю над этим.`,
+            error: (message = '') => `Сама серйозна помилка`
         }
     }
 }

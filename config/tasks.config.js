@@ -1,6 +1,7 @@
 module.exports = {
     minPointsCount: 1000,
     minCount: {
-        followers: 50
+        followers: 25,
+        likes: 45
     }
 }

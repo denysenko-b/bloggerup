@@ -1,6 +1,7 @@
 const Task = require('../models/task.model');
 const User = require('../models/user.model');
-// const TaskPreview = require('../models/task.preview');
+const PointsRate = require('../config/pointsRate.config');
+
 const {
     payForTask,
     getCompleted
@@ -66,6 +67,9 @@ class TaskController {
                     taskType,
                     data
                 }
+            },
+            $inc: {
+                points: PointsRate[taskType][0]
             }
         }).select('completed');
 
@@ -86,6 +90,8 @@ class TaskController {
     //     authorId
     // });
 
+    getTaskById = taskId => Task.findById(taskId).select('data');
+
     getAvaliableTasks = async (userId, accountData) => {
         const userCompleted = (await getCompleted(userId)).map(task => task.data);
         userCompleted.push(accountData);
@@ -100,6 +106,9 @@ class TaskController {
                     done: false,
                     data: {
                         $nin: userCompleted
+                    },
+                    authorId: {
+                        $ne: userId
                     }
                 }
             }, {
