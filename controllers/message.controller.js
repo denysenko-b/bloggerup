@@ -1,6 +1,7 @@
 const UserController = require("./user.controller");
 const TaskController = require("./task.controller");
 const ProblemController = require("./problem.controller");
+const PaymentController = require("./payment.controller");
 
 const InstagramService = require("../services/instagram.service");
 
@@ -11,6 +12,7 @@ const TasksConfig = require("../config/tasks.config");
 const WarningsConfig = require("../config/warnings.config");
 const ReferralRewards = require("../config/referralRewards.confg");
 const HelperConfig = require("../config/helper.config");
+const PaymentConfig = require("../config/payment.config");
 
 const Texts = require("../texts");
 
@@ -21,6 +23,8 @@ const {
     CheckTheTaskIsOverKeyboard,
     SupportSendAddMaterialKeyboard,
     SupportTheProblemIsSuccessfulyCompleted,
+    ReferralLinkKeyboard,
+    SelectThePaymentProviderKeyboard,
 } = require("../keyboards");
 
 const keyboardsMessages = Texts.keyboards;
@@ -399,6 +403,29 @@ class MessageController {
         }
     };
 
+    checkPointsByBuy = async (ctx, userId, points) => {
+        const replyText = replyMessages.buyPoints;
+        const messageId = ctx.message.message_id;
+        // const chatId = ctx.message.chat.id;
+
+        if (isNaN(points)) {
+            return ctx.reply(replyText.notANumber, {
+                reply_to_message_id: messageId,
+            });
+        }
+
+        if (points < PaymentConfig.points.min) {
+            return ctx.reply(replyText.littleNumber, {
+                reply_to_message_id: messageId,
+            });
+        }
+
+        return ctx.reply(
+            replyText.selectThePaymentProvider,
+            SelectThePaymentProviderKeyboard(points)
+        );
+    };
+
     messageListener = async (ctx) => {
         const {
             message,
@@ -448,6 +475,9 @@ class MessageController {
 
         if (prevMessage === "create_likes_task=get_user_media")
             return this.checkUserMedia(ctx, userId, text);
+
+        if (prevMessage === "buy_points")
+            return this.checkPointsByBuy(ctx, userId, text);
 
         if (prevMessage?.includes("support_describe_a_problem"))
             return this.createUserProblem(ctx, text);
@@ -732,7 +762,7 @@ class MessageController {
 
     becomeAReferral = async (ctx, userId) => {
         const replyText = replyMessages.referralRewards.becomeAReferral(userId);
-        ctx.reply(replyText);
+        ctx.reply(replyText, ReferralLinkKeyboard(userId));
     };
 
     markProblemAsFixed = async (ctx, [problemId, chatId]) => {
@@ -770,6 +800,40 @@ class MessageController {
         }
     };
 
+    aboutBuyPoints = async (ctx, userId) => {
+        const replyText = replyMessages.buyPoints;
+        await UserController.setPrevMessage(userId, "buy_points");
+        return ctx.reply(replyText.about);
+    };
+
+    sendBuyPointsMethod = async (ctx, userId, _data) => {
+        let [points, provider] = _data.split("&");
+        //in future update will add a finance converter
+        const [a, b] = PaymentConfig.points.rate;
+        const price = Math.floor((points * b) / a);
+
+        const cashback = PaymentConfig.points.cachback.find(
+            ([min]) => points >= min
+        );
+
+        if (cashback) points = Math.ceil(~~points + points * cashback[2]);
+
+        const invonce = PaymentController.createInvoice(
+            userId,
+            "Buy points",
+            "Buy points",
+            "USD",
+            price,
+            points,
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSy6qVqY2NfNJf6zGbowip2uva3Ewqh5QVqZA&usqp=CAU",
+            500,
+            500,
+            provider
+        );
+        await ctx.deleteMessage();
+        return ctx.replyWithInvoice(invonce);
+    };
+
     callbackQueryListener = async (ctx) => {
         const {
             callbackQuery: { data },
@@ -794,7 +858,12 @@ class MessageController {
         if (data === "become_a_referral")
             return this.becomeAReferral(ctx, userId);
 
+        if (data === "buy_points") return this.aboutBuyPoints(ctx, userId);
+
         let [command, _data] = data.split("=");
+
+        if (command === "bp")
+            return this.sendBuyPointsMethod(ctx, userId, _data);
 
         _data = JSON.parse(_data);
 

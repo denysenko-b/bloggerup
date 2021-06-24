@@ -192,6 +192,8 @@ class UserController {
         }
     })
 
+    updateUserPoints = (userId, points) => User.findOneAndUpdate({userId}, {$inc: {points}})
+
     getReferralData = async (userId) => User.findOne({
         userId
     }).select('chatId firstName points gotReferralReward')

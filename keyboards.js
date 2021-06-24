@@ -6,7 +6,9 @@ const {
         getPoints,
         checkTheTaskIsOver,
         supportSendAddMaterial,
-        supportTheProblemIsSuccessfulyCompleted
+        supportTheProblemIsSuccessfulyCompleted,
+        referralLink,
+        selectThePaymentProvider
     }
 } = require('./texts');
 
@@ -41,13 +43,19 @@ const SupportSendAddMaterialKeyboard = (id) => createKeyboard('inline_keyboard',
 
 const SupportTheProblemIsSuccessfulyCompleted = (problemId, chatId) => createKeyboard('inline_keyboard', supportTheProblemIsSuccessfulyCompleted(JSON.stringify([problemId, chatId])))
 
+const ReferralLinkKeyboard = (userId) => createKeyboard('inline_keyboard', referralLink(userId));
+
+const SelectThePaymentProviderKeyboard = points => createKeyboard('inline_keyboard', selectThePaymentProvider(points))
+
 module.exports = {
     MenuKeyboard,
     SelectTaskTypeInlineKeyboard,
     DoYouAgreeKeyboard,
     GetPointsKeyboard,
     CheckTheTaskIsOverKeyboard,
+    ReferralLinkKeyboard,
 
     SupportSendAddMaterialKeyboard,
-    SupportTheProblemIsSuccessfulyCompleted
+    SupportTheProblemIsSuccessfulyCompleted,
+    SelectThePaymentProviderKeyboard
 }

@@ -1,7 +1,7 @@
 const { IgApiClient } = require("instagram-private-api");
 const fetch = require("node-fetch");
 
-const InstServiceConfig = require("../config/instagraService.config");
+const InstServiceConfig = require("../config/instagramService.config");
 const User = require("../models/user.model");
 const AGENTS = require("../config/instagramAgents.confg");
 
