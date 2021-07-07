@@ -1,29 +1,32 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
-const CompletedSchema = new Schema({
-    data: String,
-    taskType: String,
-    completedAt: {
-        type: Date,
-        default: new Date(Date.now())
+const CompletedSchema = new Schema(
+    {
+        data: String,
+        taskType: String,
+        completedAt: {
+            type: Date,
+            default: new Date(Date.now()),
+        },
+    },
+    {
+        _id: false,
     }
-}, {
-    _id: false
-})
+);
 
 const UserSchema = new Schema({
     userId: {
         type: Number,
         unique: true,
-        require: true
+        require: true,
     },
 
     chatId: {
         type: Number,
         unique: true,
-        require: true
+        require: true,
     },
 
     firstName: String,
@@ -31,55 +34,55 @@ const UserSchema = new Schema({
 
     accountUsername: {
         type: String,
-        unique: true
+        unique: true,
     },
     accountId: {
         type: String,
-        unique: true
+        unique: true,
     },
 
     points: {
         type: Number,
-        default: 500000
+        default: 500000,
     },
 
     referralParent: Number,
     gotReferralReward: {
         type: Boolean,
-        default: false
+        default: false,
     },
 
     prevMessage: String,
 
     notifications: {
         type: Boolean,
-        default: true
+        default: true,
     },
 
-    completed: [
-        CompletedSchema
-    ],
+    completed: [CompletedSchema],
 
     banned: {
         type: Boolean,
-        default: false
+        default: false,
     },
 
     lastActivity: {
         type: Date,
-        default: new Date(Date.now())
+        default: new Date(Date.now()),
     },
     lastActivityInst: {
         type: Date,
-        default: new Date(Date.now())
+        default: new Date(Date.now()),
     },
-    
+    addedAt: {
+        type: Date,
+        default: new Date(Date.now()),
+    },
+
     lastTaskNotificationDate: {
         type: Date,
-        default: new Date(1)
+        default: new Date(1),
     },
+});
 
-})
-
-
-module.exports = mongoose.model('User', UserSchema);
+module.exports = mongoose.model("User", UserSchema);

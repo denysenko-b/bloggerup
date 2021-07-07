@@ -1,10 +1,10 @@
 module.exports = {
-    userCountPercent: .3,
+    userCountPercent: .6,
     
     //minutes
     absenseTime: 20,
 
 
     //hours
-    timeSinceLastTaskNotification: 2
+    timeSinceLastTaskNotification: 4
 }

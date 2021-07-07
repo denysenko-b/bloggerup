@@ -1,7 +1,7 @@
 module.exports ={
     numberOfWarnings: 5,
     
-    //in seconds
+    //in seconds частота надсилання повідомлень
     minTimeDelay: .5, 
     
      //in seconds

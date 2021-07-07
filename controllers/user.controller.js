@@ -92,6 +92,7 @@ class UserController {
 
         if (is_private) throw 'is_private';
 
+        //TODO А треба провіряти аватарку?
         if (has_anonymous_profile_picture) throw 'account_must_have_an_avatar'
 
 

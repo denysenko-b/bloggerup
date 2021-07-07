@@ -25,6 +25,10 @@ const {
     SupportTheProblemIsSuccessfulyCompleted,
     ReferralLinkKeyboard,
     SelectThePaymentProviderKeyboard,
+    ManageTasksKeyboard,
+    CreateMyTasksListKeyboard,
+    TaskEditorKeyboard,
+    MenuKeyboard
 } = require("../keyboards");
 
 const keyboardsMessages = Texts.keyboards;
@@ -47,20 +51,22 @@ class MessageController {
                 username.toLowerCase()
             );
 
-            const { full_name, profile_pic_url } =
-                await UserController.updateAccountUsername(
-                    userId,
-                    instUserData
-                );
+            await UserController.updateAccountUsername(
+                userId,
+                instUserData
+            );
 
             await UserController.clearPrevMessage(userId);
             await ctx.tg.deleteMessage(chatId, prev_message_id);
 
-            const caption = replyText.successfulReg(full_name || username);
+            // const caption = replyText.successfulReg(full_name || username);
 
-            return ctx.replyWithPhoto(profile_pic_url, {
-                caption,
-            });
+            // await ctx.replyWithPhoto(profile_pic_url, {
+            //     caption,
+            //     ...MenuKeyboard
+            // });
+
+            return await ctx.reply(replyText.successfulReg, MenuKeyboard);
         } catch (e) {
             let message = "";
 
@@ -103,7 +109,7 @@ class MessageController {
 
                 default:
                     console.log(e);
-                    message = replyMessages.error();
+                    message = replyMessages.error;
                     break;
             }
 
@@ -120,9 +126,12 @@ class MessageController {
         const replyText = replyMessages.tasks.giveTask;
 
         if (points < TasksConfig.minPointsCount)
-            return ctx.reply(replyText.errors.fewPoints);
+            return ctx.editMessageText(replyText.errors.fewPoints);
 
-        return ctx.reply(replyText.about, SelectTaskTypeInlineKeyboard);
+        return ctx.editMessageText(
+            replyText.about,
+            SelectTaskTypeInlineKeyboard
+        );
     };
 
     sendFollowersTask = async (ctx, _data, prev_message_id, userAccountId) => {
@@ -136,17 +145,16 @@ class MessageController {
             const { profile_pic_url, full_name, username } =
                 await InstagramService.getUserById(ctx, data);
 
-            const caption =
-                replyMessages.tasks.getAvaliableTasks.followers.createTask(
-                    full_name,
-                    username
-                );
+            const text = replyText.followers.createTask(full_name, username);
 
-            await ctx.tg.deleteMessage(chatId, prev_message_id);
-            return ctx.replyWithPhoto(profile_pic_url, {
-                caption,
-                ...CheckTheTaskIsOverKeyboard([data, _id, "f"]),
-            });
+            // await ctx.tg.deleteMessage(chatId, prev_message_id);
+            return ctx.tg.editMessageText(
+                chatId,
+                prev_message_id,
+                null,
+                text,
+                CheckTheTaskIsOverKeyboard([data, _id, "f"], username)
+            );
         } catch (e) {
             let message = "";
 
@@ -156,12 +164,12 @@ class MessageController {
                     break;
 
                 case "service_is_unavaliabe":
-                    message = replyText.instagramServiceIsUnavaliable;
+                    message = replyMessages.instagramService.unavaliable;
                     break;
 
                 default:
                     console.log(e);
-                    message = replyText.unhandledError;
+                    message = replyMessages.unhandledError;
                     break;
             }
 
@@ -188,7 +196,7 @@ class MessageController {
                 prev_message_id,
                 null,
                 replyText.likes.createTask(shortUrl),
-                CheckTheTaskIsOverKeyboard([mediaId, _id, "l"])
+                CheckTheTaskIsOverKeyboard([mediaId, _id, "l"], `p/${shortUrl}`)
             );
         } catch (e) {
             let message = "";
@@ -196,7 +204,7 @@ class MessageController {
             switch (e) {
                 default:
                     console.log(e);
-                    message = replyText.unhandledError;
+                    message = replyMessages.unhandledError;
                     break;
             }
 
@@ -208,7 +216,7 @@ class MessageController {
         const replyText = replyMessages.tasks.getAvaliableTasks;
         const chatId = ctx.chat.id;
         const { message_id: prev_message_id } = await ctx.reply(
-            replyText.check
+            replyText.search
         );
         let message = "";
 
@@ -249,7 +257,6 @@ class MessageController {
                 }
             }
 
-            // message = 'Не тикай сюди, це ще не працює))';
         } catch (e) {
             switch (e) {
                 case "not_avaliable":
@@ -258,7 +265,7 @@ class MessageController {
 
                 default:
                     console.log(e);
-                    message = replyText.unhandledError;
+                    message = replyMessages.unhandledError;
                     break;
             }
 
@@ -271,7 +278,7 @@ class MessageController {
     checkBalance = async (ctx, userId, { points }) => {
         const replyText = replyMessages.tasks.checkBalance;
 
-        ctx.reply(replyText.balance(points), GetPointsKeyboard);
+        ctx.reply(replyText.balance(points), {...GetPointsKeyboard, parse_mode: 'html'});
     };
 
     buyPoints = async (ctx, userId, userData) => {};
@@ -420,10 +427,25 @@ class MessageController {
             });
         }
 
-        return ctx.reply(
+        const [a, b] = PaymentConfig.points.rate;
+        const price = Math.floor((points * b) / a);
+
+        if (price >= 10000) {
+            return ctx.reply(replyText.bigNumber, {
+                reply_to_message_id: messageId,
+            })
+        }
+
+        await UserController.clearPrevMessage(userId);
+        return await ctx.reply(
             replyText.selectThePaymentProvider,
             SelectThePaymentProviderKeyboard(points)
         );
+    };
+
+    manageTasks = async (ctx, userId, userData) => {
+        const replyText = replyMessages.tasks.manageTasks;
+        ctx.reply(replyText.about, ManageTasksKeyboard);
     };
 
     messageListener = async (ctx) => {
@@ -444,10 +466,15 @@ class MessageController {
             ...menu,
         };
 
+        // //!ONLY DEV
+        // if (text === 'dev') {
+        //     return await ctx.reply(replyMessages.newInstAccount.successfulReg)
+        // }
+
         for (const command in reservedMessages) {
             if (text === reservedMessages[command]) {
                 if (!accountId) {
-                    await UserController.setPrevMessage(userId, "reg");
+                    // await UserController.setPrevMessage(userId, "reg");
                     return ctx.reply(
                         replyMessages.newInstAccount
                             .firstCompleteTheRegistration
@@ -495,21 +522,22 @@ class MessageController {
         return ctx.reply(replyMessages.iDontUnderstand);
     };
 
-    // wait = (seconds) =>
-    //     new Promise((resolve) => setTimeout(() => resolve(), seconds * 1000));
-
     sendFollowersTaskInfo = async (ctx, userId) => {
         const replyText = replyMessages.tasks.giveTask.followers;
-        // const messageId = ctx.callbackQuery.message.message_id;
 
-        await ctx.editMessageText(replyText.about);
-        // await this.wait(3);
-        await ctx.reply(replyText.showCurrentBalance(1000));
-        // await this.wait(2);
-        await ctx.reply(replyText.pointsRate);
         await UserController.setPrevMessage(userId, "create_followers_task");
-        // await this.wait(3);
-        return ctx.reply(replyText.waitFollowersCount);
+        return ctx.reply(replyText);
+    };
+    
+
+    sendLikesTaskInfo = async (ctx, userId) => {
+        const replyText = replyMessages.tasks.giveTask.likes;
+
+        await UserController.setPrevMessage(
+            userId,
+            "create_likes_task=get_user_media"
+        );
+        return ctx.reply(replyText.about);
     };
 
     callculateCost = async (ctx, count, [a, b], userPoints, taskType, data) => {
@@ -536,19 +564,11 @@ class MessageController {
             });
         }
 
-        replyText = replyText[taskType];
-
         await UserController.clearPrevMessage(ctx.from.id);
-        await ctx.reply(replyText.showCost(cost), {
+        return await ctx.reply(replyText.addNewTask.showCost(cost), {
             reply_to_message_id: messageId,
+            ...DoYouAgreeKeyboard(taskType, [count, data])
         });
-
-        const callback_data = [count, data];
-
-        return ctx.reply(
-            replyText.waitUserAgree,
-            DoYouAgreeKeyboard(taskType, callback_data)
-        );
     };
 
     sendNotificationsAboutNewTask = async (ctx, chatId, count) => {
@@ -581,10 +601,6 @@ class MessageController {
         const cost = (count * a) / b;
 
         try {
-            const message = replyText[taskType];
-
-            console.log(data);
-
             await TaskController.createTask(
                 userId,
                 taskType,
@@ -593,7 +609,7 @@ class MessageController {
                 cost
             );
 
-            await ctx.editMessageText(message.successfulAddTask, {});
+            await ctx.editMessageText(replyText.addNewTask.successfulAddTask, {});
 
             return this.sendNotificationsAboutNewTask(ctx, ctx.chat.id, count);
         } catch (e) {
@@ -612,16 +628,6 @@ class MessageController {
 
             ctx.editMessageText(message, {});
         }
-    };
-
-    sendLikesTaskInfo = async (ctx, userId) => {
-        const replyText = replyMessages.tasks.giveTask.likes;
-
-        await UserController.setPrevMessage(
-            userId,
-            "create_likes_task=get_user_media"
-        );
-        return ctx.editMessageText(replyText.about);
     };
 
     cancel = async (ctx) => ctx.editMessageText(replyMessages.cancelQuery, {});
@@ -658,10 +664,10 @@ class MessageController {
 
             const { firstName: refirstName, chatId: rechatId } = parent;
 
-            await ctx.tg.sendMessage(rechatId, replyText.parent(firstName));
+            await ctx.tg.sendMessage(rechatId, replyText.message(firstName));
             await parent.save();
 
-            await ctx.tg.sendMessage(chatId, replyText.child(refirstName));
+            await ctx.tg.sendMessage(chatId, replyText.message(refirstName));
             return await child.save();
         } catch (e) {
             console.log(e);
@@ -669,40 +675,20 @@ class MessageController {
     };
 
     checkTheTaskIsOver = async (ctx, userId, [data, taskId, taskType]) => {
-        const {
-            message: { reply_markup: cacheReplyMarkup },
-        } = ctx.callbackQuery;
-
-        let cacheReply = ctx.callbackQuery.message;
-
         let replyText = replyMessages.tasks.getAvaliableTasks;
         let isOver = false;
 
-        const editMessage = (taskType) => {
+        try {
+            await ctx.editMessageText(replyText.check);
+
             switch (taskType) {
                 case "f":
                     replyText = replyText.followers;
-                    cacheReply = cacheReply.caption;
-                    return (caption) => ctx.editMessageCaption(caption);
-
-                case "l":
-                    replyText = replyText.likes;
-                    cacheReply = cacheReply.text;
-                    return (text) => ctx.editMessageText(text);
-            }
-        };
-
-        const messageEditor = editMessage(taskType);
-
-        try {
-            await messageEditor(replyText.check);
-
-            switch (taskType) {
-                case "f":
                     isOver = await this.checkTheFTaskIsOver(ctx, data);
                     break;
 
                 case "l":
+                    replyText = replyText.likes;
                     isOver = await this.checkTheLTaskIsOver(ctx, data);
                     break;
             }
@@ -710,17 +696,22 @@ class MessageController {
 
             await TaskController.markCompleted(userId, taskId);
 
-            await messageEditor(replyText.successfullyExecuted);
+            await ctx.editMessageText(replyMessages.tasks.getAvaliableTasks.successfullyExecuted);
 
             const { referralParent, gotReferralReward } = ctx.userData;
             if (referralParent && !gotReferralReward) {
-                await messageEditor(replyText.successfullyExecutedWithReward);
+                await ctx.editMessageText(
+                    replyMessages.tasks.getAvaliableTasks.successfullyExecutedWithReward
+                );
 
                 return this.sendReferralRewards(ctx);
             }
 
             return this.getAvaliableTasks(ctx, userId, ctx.userData);
         } catch (e) {
+            const {
+                message: { reply_markup: cacheReplyMarkup, text: cacheReply },
+            } = ctx.callbackQuery;
             let message = "";
 
             switch (e) {
@@ -730,31 +721,33 @@ class MessageController {
                     break;
 
                 case "Incorrect task type":
-                    message = replyText.unhandledError;
+                    message = replyMessages.unhandledError;
                     break;
 
                 case "service_is_unavaliabe":
-                    message = replyText.instagramServiceIsUnavaliable;
+                    message = replyMessages.instagramService.unavaliable;
                     break;
 
                 case "many_requests":
-                    message = replyText.manyRequests;
+                    message = replyMessages.tasks.getAvaliableTasks.manyRequests;
                     break;
 
                 default:
-                    console.log(e);
-                    message = replyText.unhandledError;
+                    message = replyMessages.unhandledError;
                     break;
             }
 
-            await messageEditor(message);
+            console.log(e);
+            await ctx.editMessageText(message || 'a');
 
             setTimeout(async () => {
                 try {
-                    await messageEditor(cacheReply);
+                    await ctx.editMessageText(cacheReply);
                     await ctx.editMessageReplyMarkup(cacheReplyMarkup);
                 } catch (e) {
-                    console.log(e);
+                    // console.log(e);
+                    console.log(cacheReply);
+                    console.log(cacheReplyMarkup)
                 }
             }, WarningsConfig.warnDuration * 1000);
         }
@@ -768,8 +761,6 @@ class MessageController {
     markProblemAsFixed = async (ctx, [problemId, chatId]) => {
         const cacheText = ctx.callbackQuery.message.text;
         const replyText = replyMessages.support;
-
-        console.log(cacheText);
 
         try {
             await ctx.editMessageText(replyText.fixed(cacheText));
@@ -818,20 +809,196 @@ class MessageController {
 
         if (cashback) points = Math.ceil(~~points + points * cashback[2]);
 
+        const replyText = replyMessages.buyPoints;
+
         const invonce = PaymentController.createInvoice(
             userId,
-            "Buy points",
-            "Buy points",
+            replyText.title(points),
+            replyText.description,
             "USD",
             price,
             points,
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSy6qVqY2NfNJf6zGbowip2uva3Ewqh5QVqZA&usqp=CAU",
-            500,
-            500,
             provider
         );
         await ctx.deleteMessage();
-        return ctx.replyWithInvoice(invonce);
+        try { 
+            return await ctx.replyWithInvoice(invonce);
+        } catch (e) {
+            let message = '';
+            
+            if (e.message.includes('CURRENCY_TOTAL_AMOUNT_INVALID') || e.message.includes('INVOICE_PAYLOAD_INVALID')) {
+                message = Texts.reply.payment.errors.exceedingTheLimit;
+            } else {
+                switch (e) {
+                    default:
+                        console.log(e);
+                        message = replyMessages.unhandledError;
+                }
+            }
+
+            return await ctx.reply(message);
+        }
+    };
+
+    skipThisTask = async (ctx, userId) => {
+        try {
+            await ctx.deleteMessage();
+        return this.getAvaliableTasks(ctx, userId, ctx.userData);
+        } catch (e) {
+            let message = '';
+            switch (e) {
+                default:
+                    message = replyMessages.unhandledError; 
+            }
+
+            ctx.reply(message);
+        }
+    };
+
+    manageMyTasks = async (ctx, userId, next = 0) => {
+        const replyText = replyMessages.tasks.manageTasks;
+
+        try {
+            const aCount = await TaskController.getMyActiveTaskCount(userId);
+            const tasks = await TaskController.getMyTasks(userId, next);
+            if (tasks.length === 0)
+                return ctx.editMessageText(replyText.noTasks);
+
+            const done = tasks.length <= TasksConfig.taskPerPage;
+
+            return await ctx.editMessageText(
+                replyText.myTasks(aCount),
+                CreateMyTasksListKeyboard(
+                    tasks.slice(0, TasksConfig.taskPerPage),
+                    next,
+                    done
+                )
+            );
+        } catch (e) {
+            console.log(e);
+        }
+    };
+
+    getMyTasksNextPage = async (ctx, userId, next) => {
+        // console.log(next);
+        try {
+            const tasks = await TaskController.getMyTasks(userId, next);
+            const done = tasks.length <= TasksConfig.taskPerPage;
+
+            return await ctx.editMessageReplyMarkup(
+                CreateMyTasksListKeyboard(
+                    tasks.slice(0, TasksConfig.taskPerPage),
+                    next,
+                    done
+                ).reply_markup
+            );
+        } catch (e) {
+            console.log(e);
+        }
+    };
+
+    sendTaskEditor = async (
+        ctx,
+        userId,
+        [taskId, next, id],
+        taskData = null
+    ) => {
+        try {
+            const { data, taskType, taskState, count, completed } =
+                taskData || (await TaskController.getTaskById(taskId));
+
+            const createReplyText =
+                replyMessages.tasks.getAvaliableTasks[taskType].createTask;
+
+            let replyText = "";
+
+            switch (taskType) {
+                case "followers":
+                    const { profile_pic_url, full_name, username } =
+                        await InstagramService.getUserById(ctx, data);
+                    replyText = createReplyText(full_name, username);
+                    break;
+                case "likes":
+                    replyText = createReplyText(data.split("&")[0]);
+                    break;
+
+                default:
+                    break;
+            }
+
+            return await ctx.editMessageText(
+                replyMessages.tasks.manageTasks.taskEditor(
+                    taskState,
+                    count,
+                    completed,
+                    id,
+                    replyText
+                ),
+                TaskEditorKeyboard(taskId, taskState, next, id)
+            );
+        } catch (e) {
+            const {
+                message: { reply_markup: cacheReplyMarkup, text: cacheReply },
+            } = ctx.callbackQuery;
+            let message = "";
+
+            switch (e) {
+                case "service_is_unavaliabe":
+                    message = replyMessages.instagramService.unavaliable;
+                    break;
+
+                default:
+                    console.log(e);
+                    message = replyMessages.unhandledError;
+            }
+
+            await ctx.editMessageText(message, {});
+
+            setTimeout(async () => {
+                try {
+                    await ctx.editMessageText(cacheReply);
+                    await ctx.editMessageReplyMarkup(cacheReplyMarkup);
+                } catch (e) {
+                    console.log(e);
+                }
+            }, WarningsConfig.warnDuration * 1000);
+        }
+    };
+
+    changeTaskStateAndSendTaskEditor = async (ctx, userId, data, newState) => {
+        try {
+            const taskData = await TaskController.changeTaskState(
+                data[0],
+                newState
+            );
+            
+            return await this.sendTaskEditor(ctx, userId, data, taskData);
+        } catch (e) {
+            
+            let message = "";
+
+            const {
+                message: { reply_markup: cacheReplyMarkup, text: cacheReply },
+            } = ctx.callbackQuery;
+
+            switch (e) {
+                default:
+                    console.log(e);
+                    message = replyMessages.unhandledError;
+                    break;
+            }
+
+            await ctx.editMessageText(message);
+
+            return setTimeout(async () => {
+                try {
+                    await ctx.editMessageText(cacheReply);
+                    await ctx.editMessageReplyMarkup(cacheReplyMarkup);
+                } catch (e) {
+                    console.log(e);
+                }
+            }, WarningsConfig.warnDuration * 1000);
+        }
     };
 
     callbackQueryListener = async (ctx) => {
@@ -850,24 +1017,46 @@ class MessageController {
 
         if (data === giveTask.likes.callback_data)
             return this.sendLikesTaskInfo(ctx, userId);
-        if (data === giveTask.followers.callback_data)
+        else if (data === giveTask.followers.callback_data)
             return this.sendFollowersTaskInfo(ctx, userId);
-        if (data === "cancel") return this.cancel(ctx, userId);
-        if (data === "give_me_a_task")
+        else if (data === "cancel") return this.cancel(ctx, userId);
+        else if (data === "give_me_a_task")
             return this.getAvaliableTasks(ctx, userId, userData);
-        if (data === "become_a_referral")
+        else if (data === "become_a_referral")
             return this.becomeAReferral(ctx, userId);
-
-        if (data === "buy_points") return this.aboutBuyPoints(ctx, userId);
+        else if (data === "buy_points") return this.aboutBuyPoints(ctx, userId);
+        else if (data === "cttio=skip") return this.skipThisTask(ctx, userId);
+        else if (data === "my_tasks") return this.manageMyTasks(ctx, userId);
+        else if (data === "give_task")
+            return this.giveTask(ctx, userId, userData);
 
         let [command, _data] = data.split("=");
 
         if (command === "bp")
             return this.sendBuyPointsMethod(ctx, userId, _data);
+        else if (command === "my_tasks_next_page")
+            return this.getMyTasksNextPage(ctx, userId, _data);
+        else if (command === "my_tasks_back_from_editor")
+            return this.manageMyTasks(ctx, userId, _data);
 
         _data = JSON.parse(_data);
 
-        if (command === "cft")
+        if (command === "mto") return this.sendTaskEditor(ctx, userId, _data);
+        else if (command === "mtf")
+            return this.changeTaskStateAndSendTaskEditor(
+                ctx,
+                userId,
+                _data,
+                "freezed"
+            );
+        else if (command === "mtuf")
+            return this.changeTaskStateAndSendTaskEditor(
+                ctx,
+                userId,
+                _data,
+                "active"
+            );
+        else if (command === "cft")
             return this.createTask(
                 ctx,
                 userId,
@@ -875,8 +1064,7 @@ class MessageController {
                 "followers",
                 PointsRate.followers
             );
-
-        if (command === "clt_m")
+        else if (command === "clt_m")
             return this.createTask(
                 ctx,
                 userId,
@@ -884,11 +1072,11 @@ class MessageController {
                 "likes",
                 PointsRate.likes
             );
-
-        if (command === "cttio")
+        else if (command === "cttio")
             return this.checkTheTaskIsOver(ctx, userId, _data);
-        if (command === "stpisc") return this.markProblemAsFixed(ctx, _data);
-        if (command === "support_ss")
+        else if (command === "stpisc")
+            return this.markProblemAsFixed(ctx, _data);
+        else if (command === "support_ss")
             return this.supportSkipStep(ctx, userId, _data);
     };
 }

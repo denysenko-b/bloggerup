@@ -1,45 +1,45 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
 const TaskSchema = new Schema({
     authorId: {
         type: Number,
-        require: true
+        require: true,
     },
 
     /**
      * Тип завдання
      * Лайки під постом
-     * 
+     *
      * Підписки
      */
     taskType: {
         type: String,
-        require: true
+        require: true,
     },
     data: {
         type: String,
-        require: true
+        require: true,
     },
     completed: {
         type: Number,
-        default: 0
+        default: 0,
     },
     count: {
         type: Number,
-        require: true
+        require: true,
     },
 
-    done: {
-        type: Boolean,
-        default: false
+    taskState: {
+        type: String,
+        default: 'active',
     },
 
     publishedAt: {
         type: Date,
-        default: new Date(Date.now())
-    }
-})
+        default: new Date(Date.now()),
+    },
+});
 
-module.exports = mongoose.model('Task', TaskSchema);
+module.exports = mongoose.model("Task", TaskSchema);

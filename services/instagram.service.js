@@ -5,14 +5,17 @@ const InstServiceConfig = require("../config/instagramService.config");
 const User = require("../models/user.model");
 const AGENTS = require("../config/instagramAgents.confg");
 
-const ig = new IgApiClient();
-let avaliabe = InstServiceConfig.avaliable;
+let ig = new IgApiClient(),
+    avaliabe = InstServiceConfig.avaliable;
 
 const login = async (username, password) => {
+    console.log(`Try to use <${username}> as Instagram Agent`);
+    ig = new IgApiClient();
     ig.state.generateDevice(username);
-    await ig.simulate.preLoginFlow();
+
+    // await ig.simulate.preLoginFlow();
     const loggedInUser = await ig.account.login(username, password);
-    console.log(`We'll use <${username}> as Instagram Agent`);
+    console.log(`Success -- We'll use <${username}> as Instagram Agent`);
 
     process.nextTick(async () => await ig.simulate.postLoginFlow());
     avaliabe = true;
@@ -31,7 +34,8 @@ async function changeAgent() {
     try {
         await login(...getUserData.next().value);
     } catch (e) {
-        setTimeout(changeAgent, 5 * 60 * 1000);
+        console.log(e);
+        setTimeout(changeAgent, 60 * 1000);
     }
 }
 
@@ -88,7 +92,6 @@ const request =
         }
     };
 
-
 const getUserByUsernameL = request(
     async (username) => {
         return await ig.user.usernameinfo(username);
@@ -130,31 +133,28 @@ const getUserById = request((id) => ig.user.info(id));
 
 const getUserFollowers = request((id) => ig.feed.accountFollowers(id).items());
 
-const getMediaLikes = request(id => ig.media.likers(id))
+const getMediaLikes = request((id) => ig.media.likers(id));
 
 const getMainMediaData = async (url) => {
-    const data = await fetch(
-        `https://api.instagram.com/oembed/?url=${url}`
-    );
+    const data = await fetch(`https://api.instagram.com/oembed/?url=${url}`);
     switch (data.status) {
         case 400:
-            throw 'bad_request';
+            throw "bad_request";
 
         case 404:
-            throw 'not_found';
+            throw "not_found";
 
         case 200:
-            return await data.json();;
+            return await data.json();
 
         default:
-            throw 'unhandled_error';
+            throw "unhandled_error";
     }
 };
 
 // (async () => {
 //     console.log(await isMyMedia("https://www.instagram.com/p/CQdJK0CD_Nq"))
 
-   
 // })()
 
 module.exports = {
@@ -162,5 +162,5 @@ module.exports = {
     getUserByUsername: getUserByUsernameL,
     getUserFollowers,
     getMainMediaData,
-    getMediaLikes
+    getMediaLikes,
 };

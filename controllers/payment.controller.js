@@ -13,21 +13,22 @@ class PaymentController {
         currency,
         price,
         points,
-        photo_url,
-        photo_width,
-        photo_height,
+        // photo_url,
+        // photo_width,
+        // photo_height,
         provider = "tranzzo"
     ) => {
         const invonce = {
             chat_id,
             provider_token: paymentConfig.tokens[provider],
+            start_parameter: 'get_access',
             title,
             description,
             currency,
             prices: [{ label: title, amount: price * 100 }],
-            photo_url,
-            photo_width,
-            photo_height,
+            // photo_url,
+            // photo_width,
+            // photo_height,
             payload: {
                 unique_id: `${chat_id}_${Number(new Date())}`,
                 points,
@@ -57,11 +58,11 @@ class PaymentController {
         }
     };
 
-    successful = (ctx) => {
+    successful = async (ctx) => {
         const invoncePayload = JSON.parse(
             ctx.message.successful_payment.invoice_payload
         );
-        ctx.reply(replyText.successfullyGotPoints(invoncePayload.points));
+        return await ctx.reply(replyText.successfullyGotPoints(invoncePayload.points));
     };
 }
 
