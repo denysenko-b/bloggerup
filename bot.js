@@ -3,35 +3,47 @@ const { token } = require("./config/bot.config");
 
 const CommandController = require("./controllers/command.controller");
 const MessageController = require("./controllers/message.controller");
-const PaymentController = require('./controllers/payment.controller');
+const PaymentController = require("./controllers/payment.controller");
 const Middlewares = require("./middlewares");
 
 const bot = new Telegraf(token);
 
 bot.telegram.setMyCommands(CommandController.commands);
 
+// bot.hears('dev', ctx => {
+//     ctx.editMessageText()
+// })
 //payment
-bot.on("pre_checkout_query", PaymentController.check);
-bot.on("successful_payment", PaymentController.successful);
+bot.on("pre_checkout_query", (ctx) =>
+    PaymentController.check(ctx).catch(console.log)
+);
+bot.on("successful_payment", (ctx) =>
+    PaymentController.successful(ctx).catch(console.log)
+);
 
 //middleware
-bot.use(Middlewares.checkUser);
+bot.use((ctx, next) => Middlewares.checkUser(ctx, next).catch(console.log));
 
 //comamnds
-bot.start(CommandController.start);
-bot.help(CommandController.help);
-bot.command("menu", CommandController.menu);
-bot.command("notifications", CommandController.notifications);
-bot.command("support", CommandController.support);
+bot.start((ctx) => CommandController.start(ctx).catch(console.log));
+bot.help((ctx) => CommandController.help(ctx).catch(console.log));
+bot.command("menu", (ctx) => CommandController.menu(ctx).catch(console.log));
+bot.command("notifications", (ctx) =>
+    CommandController.notifications(ctx).catch(console.log)
+);
+bot.command("support", (ctx) => CommandController.support(ctx).catch(console.log));
 // bot.command('cancel', CommandsController.cancel)
 
-bot.use(Middlewares.isNewUser);
+bot.use((ctx, next) => Middlewares.isNewUser(ctx, next).catch(console.log));
 
-bot.use(Middlewares.support);
-bot.on("message", MessageController.messageListener);
+bot.use((ctx, next) => Middlewares.support(ctx, next).catch(console.log));
+bot.on("message", (ctx) =>
+    MessageController.messageListener(ctx).catch(console.log)
+);
 
-
-bot.on("callback_query", MessageController.callbackQueryListener);
+bot.on("callback_query", (ctx) =>
+    MessageController.callbackQueryListener(ctx).catch(console.log)
+);
 
 const start = () =>
     bot
