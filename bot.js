@@ -15,34 +15,52 @@ bot.telegram.setMyCommands(CommandController.commands);
 // })
 //payment
 bot.on("pre_checkout_query", (ctx) =>
-    PaymentController.check(ctx).catch(console.log)
+    setImmediate(() => PaymentController.check(ctx).catch(console.log))
 );
 bot.on("successful_payment", (ctx) =>
-    PaymentController.successful(ctx).catch(console.log)
+    setImmediate(() => PaymentController.successful(ctx).catch(console.log))
 );
 
 //middleware
-bot.use((ctx, next) => Middlewares.checkUser(ctx, next).catch(console.log));
+bot.use((ctx, next) =>
+    setImmediate(() => Middlewares.checkUser(ctx, next).catch(console.log))
+);
 
 //comamnds
-bot.start((ctx) => CommandController.start(ctx).catch(console.log));
-bot.help((ctx) => CommandController.help(ctx).catch(console.log));
-bot.command("menu", (ctx) => CommandController.menu(ctx).catch(console.log));
-bot.command("notifications", (ctx) =>
-    CommandController.notifications(ctx).catch(console.log)
+bot.start((ctx) =>
+    setImmediate(() => CommandController.start(ctx).catch(console.log))
 );
-bot.command("support", (ctx) => CommandController.support(ctx).catch(console.log));
+bot.help((ctx) =>
+    setImmediate(() => CommandController.help(ctx).catch(console.log))
+);
+bot.command("menu", (ctx) =>
+    setImmediate(() => CommandController.menu(ctx).catch(console.log))
+);
+bot.command("notifications", (ctx) =>
+    setImmediate(() => CommandController.notifications(ctx).catch(console.log))
+);
+bot.command("support", (ctx) =>
+    setImmediate(() => CommandController.support(ctx).catch(console.log))
+);
 // bot.command('cancel', CommandsController.cancel)
 
-bot.use((ctx, next) => Middlewares.isNewUser(ctx, next).catch(console.log));
+bot.use((ctx, next) =>
+    setImmediate(() => Middlewares.isNewUser(ctx, next).catch(console.log))
+);
 
-bot.use((ctx, next) => Middlewares.support(ctx, next).catch(console.log));
+bot.use((ctx, next) =>
+    setImmediate(() => Middlewares.support(ctx, next).catch(console.log))
+);
 bot.on("message", (ctx) =>
-    MessageController.messageListener(ctx).catch(console.log)
+    setImmediate(() =>
+        MessageController.messageListener(ctx).catch(console.log)
+    )
 );
 
 bot.on("callback_query", (ctx) =>
-    MessageController.callbackQueryListener(ctx).catch(console.log)
+    setImmediate(() =>
+        MessageController.callbackQueryListener(ctx).catch(console.log)
+    )
 );
 
 const start = () =>
