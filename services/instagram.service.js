@@ -80,7 +80,7 @@ const request =
                 e.name === "IgLoginRequiredError"
             ) {
                 avaliabe = false;
-                setTimeout(changeAgent, 0);
+                setImmediate(changeAgent);
                 return request()();
             }
             if (errorHandler) {

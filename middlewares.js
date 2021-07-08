@@ -6,6 +6,7 @@ const HelperConfig = require("./config/helper.config");
 
 class Middlewares {
     checkUser = async (ctx, next) => {
+
         const {
             from: { id: userId, first_name, username },
             chat: { id: chatId },
@@ -18,7 +19,7 @@ class Middlewares {
                 userId,
                 first_name,
                 username,
-                newActivity
+                ctx.update.message ? newActivity : 0
             );
 
             if (ctx.userData) {
