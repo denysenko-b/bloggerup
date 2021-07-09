@@ -1,6 +1,6 @@
 module.exports = {
     tokens: {
-        tranzzo: '410694247:TEST:6d7d63eb-5aaa-49a8-964a-352dd825c6c4'
+        tranzzo: '410694247:TEST:a4c88085-df1a-4ab1-b2ec-0cb66ebb1654'
     },
 
     points: {
