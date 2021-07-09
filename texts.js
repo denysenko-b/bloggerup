@@ -8,7 +8,7 @@ const paymentConfig = require("./config/payment.config");
 const pointsConfig = require("./config/points.config");
 
 const getReferralLink = (userId) =>
-    `https://t.me/test_instagram_promotion_bot?start=${userId}`;
+    `https://t.me/blogerup_bot?start=${userId}`;
 
 module.exports = {
     commands: [
