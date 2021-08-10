@@ -8,7 +8,7 @@ const paymentConfig = require("./config/payment.config");
 const pointsConfig = require("./config/points.config");
 
 const getReferralLink = (userId) =>
-    `https://t.me/test_instagram_promotion_bot?start=${userId}`;
+    `https://t.me/blogerup_bot?start=${userId}`;
 
 module.exports = {
     commands: [
@@ -270,7 +270,7 @@ module.exports = {
                 fewMedia: `Недостаточно медиа!\nМинимальное количество: ${InstAccoundConfig.minPhotos}. Введите ник аккаунта, который соответсвует минимальным требованиям:`,
                 firstCompleteTheRegistration: `Прежде чем использовать возможности сервиса, Вы должны зарегестрироватся. Введите комманду /start и следуйте инструкции.`,
                 mustHaveAnAvatar: `Аккаунт должен иметь аватар!\nВведите ник аккаунта, который соответсвует минимальным требованиям:`,
-                manyRequests: `В связи с ограничениями Инстаграма, я не могу выполнять проверку слишком часто.\nПодождите ${instagraServiceConfig.minTimeDelay} и попробуйте ещё раз:`,
+                manyRequests: `В связи с ограничениями Инстаграма, я не могу выполнять проверку слишком часто.\nПодождите ${instagraServiceConfig.minTimeDelay} секунд и попробуйте ещё раз:`,
                 check: `Проверка...`, //Check...
             },
 
