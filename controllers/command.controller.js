@@ -2,16 +2,16 @@ const UserController = require("./user.controller");
 // const Keyboards = require('../keyboards');
 const Texts = require("../texts");
 
-const { MenuKeyboard } = require("../keyboards");
+const { MenuKeyboard, PoliciesKeyboard } = require("../keyboards");
 
 class CommandsController {
     constructor() {
         this.replyTexts = Texts.reply.commands;
     }
 
-    commands = Texts.commands;
+    // commands = Texts.commands;
 
-    start = (ctx) =>
+    start = async (ctx) =>
         UserController.create(
             ctx.from.id,
             ctx.from.first_name,
@@ -26,14 +26,14 @@ class CommandsController {
             });
 
     help = async (ctx) => {
-        if (ctx.userData.prevMessage) 
+        if (ctx.userData.prevMessage)
             await UserController.clearPrevMessage(ctx.from.id)
-        
+
         return await ctx.reply(this.replyTexts.help);
     }
 
     menu = async (ctx) => {
-        if (ctx.userData.prevMessage) 
+        if (ctx.userData.prevMessage)
             await UserController.clearPrevMessage(ctx.from.id)
 
         return await ctx.reply(this.replyTexts.menu, MenuKeyboard);
@@ -66,6 +66,22 @@ class CommandsController {
         try {
             await UserController.clearPrevMessage(ctx.from.id);
             return await ctx.reply(this.replyTexts.cancel);
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    policies = async (ctx) => {
+        try {
+            return await ctx.reply(this.replyTexts.policies, PoliciesKeyboard)
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    contacts = async (ctx) => {
+        try {
+            return await ctx.reply(this.replyTexts.contacts);
         } catch (e) {
             console.log(e);
         }

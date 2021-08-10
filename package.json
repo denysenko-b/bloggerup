@@ -1,14 +1,9 @@
 {
-  "name": "insta_promotion_bot",
-  "version": "1.0.0",
-  "description": "",
+  "private":"true",
   "main": "app.js",
   "scripts": {
     "dev": "nodemon --ignore cache/* --ignore services/old/* app"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "instagram-private-api": "^1.45.1",
     "mongoose": "^5.12.13",

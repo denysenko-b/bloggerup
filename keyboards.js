@@ -11,6 +11,7 @@ const {
         selectThePaymentProvider,
         manageTasks,
         myTasks,
+        policies
     },
 } = require("./texts");
 
@@ -106,6 +107,8 @@ const TaskEditorKeyboard = (taskId, taskState, next, id) => {
     return createKeyboard("inline_keyboard", keyboard);
 };
 
+const PoliciesKeyboard = createKeyboard("inline_keyboard", policies)
+
 module.exports = {
     MenuKeyboard,
     ManageTasksKeyboard,
@@ -121,4 +124,6 @@ module.exports = {
     SupportSendAddMaterialKeyboard,
     SupportTheProblemIsSuccessfulyCompleted,
     SelectThePaymentProviderKeyboard,
+
+    PoliciesKeyboard
 };

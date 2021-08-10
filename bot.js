@@ -5,10 +5,14 @@ const CommandController = require("./controllers/command.controller");
 const MessageController = require("./controllers/message.controller");
 const PaymentController = require("./controllers/payment.controller");
 const Middlewares = require("./middlewares");
+const {commands: Commands, botSettings: BotSettings} = require('./texts');
 
 const bot = new Telegraf(token);
 
-bot.telegram.setMyCommands(CommandController.commands);
+bot.telegram.setMyCommands(Commands);
+
+console.log('BotOptions')
+Object.keys(BotSettings).forEach(option => console.log(`${option}:\n${BotSettings[option]}\n`))
 
 // bot.hears('dev', ctx => {
 //     ctx.editMessageText()
@@ -26,26 +30,37 @@ bot.use((ctx, next) =>
     setImmediate(() => Middlewares.checkUser(ctx, next).catch(console.log))
 );
 
+//commands
+Commands.forEach(({command}) => bot.command(command, (ctx) => {
+    setImmediate(() => CommandController[command](ctx).catch(console.log))
+}))
+
+
 //comamnds
-bot.start((ctx) =>
-    setImmediate(() => CommandController.start(ctx).catch(console.log))
-);
-bot.help((ctx) =>
-    setImmediate(() => CommandController.help(ctx).catch(console.log))
-);
-bot.command("menu", (ctx) =>
-    setImmediate(() => CommandController.menu(ctx).catch(console.log))
-);
-bot.command("notifications", (ctx) =>
-    setImmediate(() => CommandController.notifications(ctx).catch(console.log))
-);
-bot.command("support", (ctx) =>
-    setImmediate(() => CommandController.support(ctx).catch(console.log))
-);
+// bot.start((ctx) =>
+//     setImmediate(() => CommandController.start(ctx).catch(console.log))
+// );
+// bot.help((ctx) =>
+//     setImmediate(() => CommandController.help(ctx).catch(console.log))
+// );
+// bot.command("menu", (ctx) =>
+//     setImmediate(() => CommandController.menu(ctx).catch(console.log))
+// );
+// bot.command("notifications", (ctx) =>
+//     setImmediate(() => CommandController.notifications(ctx).catch(console.log))
+// );
+// bot.command("support", (ctx) =>
+//     setImmediate(() => CommandController.support(ctx).catch(console.log))
+// );
+// bot.command("policies", (ctx) =>
+//     setImmediate(() => CommandController.policies(ctx)))
 // bot.command('cancel', CommandsController.cancel)
 
 bot.use((ctx, next) =>
-    setImmediate(() => Middlewares.isNewUser(ctx, next).catch(console.log))
+    setImmediate(
+        () => Middlewares.isNewUser(ctx, next)
+            .catch(console.log
+            ))
 );
 
 bot.use((ctx, next) =>
