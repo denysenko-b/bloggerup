@@ -20,7 +20,14 @@ class CommandsController {
             "reg",
             ctx.startPayload
         )
-            .then(() => ctx.reply(this.replyTexts.start))
+            .then(() => {
+                ctx.reply(this.replyTexts.start, {
+                    parse_mode: "html"
+                })
+                // await ctx.tg.sendMessage(ctx.chat.id, problem, {
+                //     parse_mode: "html"
+                // });
+            })
             .catch((e) => {
                 console.log(e);
             });
