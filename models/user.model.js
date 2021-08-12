@@ -41,7 +41,7 @@ const UserSchema = new Schema({
 
     points: {
         type: Number,
-        default: 500000,
+        default: 500,
     },
 
     referralParent: Number,
