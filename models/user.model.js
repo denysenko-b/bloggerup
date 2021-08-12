@@ -19,13 +19,11 @@ const CompletedSchema = new Schema(
 const UserSchema = new Schema({
     userId: {
         type: Number,
-        unique: true,
         require: true,
     },
 
     chatId: {
         type: Number,
-        unique: true,
         require: true,
     },
 
@@ -34,11 +32,11 @@ const UserSchema = new Schema({
 
     accountUsername: {
         type: String,
-        unique: true,
+        default: ''
     },
     accountId: {
         type: String,
-        unique: true,
+        default: ''
     },
 
     points: {

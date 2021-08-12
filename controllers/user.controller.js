@@ -31,6 +31,8 @@ class UserController {
                 firstName
             })
 
+            console.log(newUser);
+
             console.log(`New user has been created. His name is: ${firstName}`)
 
             if (!referralParent) newUser.gotReferralReward = true;

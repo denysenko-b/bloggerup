@@ -1,4 +1,4 @@
 module.exports = {
-    minFollowers: 10,
-    minPhotos: 2
+    minFollowers: 0,
+    minPhotos: 0
 }

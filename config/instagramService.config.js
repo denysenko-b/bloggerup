@@ -1,5 +1,5 @@
 module.exports = {
     //seconds
-    minTimeDelay: 5,
+    minTimeDelay: 2,
     avaliable: true
 }
