@@ -1,5 +1,0 @@
-Error: Bot is not running!
-    at Object.stop (/root/projects/bloggerup/node_modules/telegraf/lib/telegraf.js:131:19)
-    at process.<anonymous> (/root/projects/bloggerup/app.js:13:34)
-    at Object.onceWrapper (node:events:514:26)
-    at process.emit (node:events:394:28)

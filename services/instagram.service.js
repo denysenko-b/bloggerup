@@ -35,7 +35,7 @@ async function changeAgent() {
         await login(...getUserData.next().value);
     } catch (e) {
         console.log(e);
-        setTimeout(changeAgent, 60 * 1000);
+        setTimeout(changeAgent, 10 * 60 * 1000);
     }
 }
 

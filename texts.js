@@ -208,7 +208,7 @@ module.exports = {
         policies: [
             [{
                 text: "Terms of Use",
-                url: helperConfig.publicOfferUrl
+                url: helperConfig.termsForUseUrl
             }],
             [{
                 text: "Privacy Policy",

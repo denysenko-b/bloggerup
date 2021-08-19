@@ -22,7 +22,8 @@ class CommandsController {
         )
             .then(() => {
                 ctx.reply(this.replyTexts.start, {
-                    parse_mode: "html"
+                    parse_mode: "html",
+                    disable_web_page_preview: true
                 })
                 // await ctx.tg.sendMessage(ctx.chat.id, problem, {
                 //     parse_mode: "html"
